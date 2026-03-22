@@ -8,9 +8,8 @@
   <meta name="apple-mobile-web-app-title" content="나만의학습장">
   <link rel="apple-touch-icon" href="https://placehold.co/180x180/4A90E2/FFFFFF/png?text=Study">
   
-  <title>나만의 심화 학습장</title>
+  <title>나만의 심화 학습장 (바운스 스크롤 적용)</title>
   <style>
-    /* 🔥 body는 고정시키고, 높이를 화면 100%로 꽉 채움 */
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       background-color: #f4f7f6;
@@ -21,9 +20,10 @@
       color: #333;
       display: flex;
       flex-direction: column;
-      height: 100vh; /* 화면 꽉 차게 */
+      height: 100vh; 
       box-sizing: border-box;
-      overflow: hidden; /* 🔥 전체 화면 스크롤 금지! */
+      overflow: hidden; 
+      overscroll-behavior: none; /* 🔥 전체 화면 바운스는 막고 아래 리스트만 바운스 되게! */
     }
     h1 {
       text-align: center;
@@ -84,18 +84,19 @@
       flex-shrink: 0;
     }
 
-    /* 🔥 목록이 들어가는 상자만 위아래로 스크롤 되도록 설정! */
     #swipeContainer {
       flex-grow: 1;
       width: 100%;
-      overflow-y: auto; /* 세로 스크롤 허용 */
+      overflow-y: auto; 
       overflow-x: hidden;
-      -webkit-overflow-scrolling: touch; /* 아이폰에서 부드러운 스크롤 */
+      -webkit-overflow-scrolling: touch; 
     }
     #app {
       width: 100%;
+      /* 🔥 여기서 1px의 마법! 내용이 적어도 무조건 스크롤 영역을 활성화시켜서 아이폰 바운스 효과를 냄 */
+      min-height: calc(100% + 1px); 
       transition: transform 0.3s ease, opacity 0.3s ease;
-      padding-bottom: 80px; /* 스크롤 맨 밑으로 내렸을 때 플로팅 버튼에 안 가려지게 여백 추가 */
+      padding-bottom: 80px; 
     }
 
     .fab-container {
@@ -328,8 +329,8 @@
       },
       {
         folder: "기본 노트",
-        title: "📱 부분 스크롤 적용",
-        content: "앱의 제목과 폴더 탭은 항상 고정되어 있고, <b>목록 부분만 부드럽게 위아래로 스크롤</b>됩니다. 진짜 앱 같죠?",
+        title: "🍎 쫀득한 바운스 스크롤",
+        content: "내용이 적어도 화면을 위아래로 당겨보세요!<br>아이폰 특유의 쫀득하게 튕기는 바운스 스크롤 효과가 적용되어 진짜 앱처럼 느껴질 거예요.",
         hiddenUntil: null
       },
       {
@@ -635,7 +636,6 @@
       }
     };
 
-    // 🔥 스와이프 로직 수정: 상하 스크롤 시 좌우 넘어감 방지
     let touchstartX = 0;
     let touchstartY = 0;
     let touchendX = 0;
@@ -654,7 +654,6 @@
       const diffX = Math.abs(touchendX - touchstartX);
       const diffY = Math.abs(touchendY - touchstartY);
       
-      // 가로 이동이 세로 이동보다 크고 60px 이상 밀었을 때만 넘어가게!
       if (diffX > 60 && diffX > diffY) {
         if (touchendX < touchstartX && currentFolderIndex < folders.length - 1) switchFolder(currentFolderIndex + 1);
         if (touchendX > touchstartX && currentFolderIndex > 0) switchFolder(currentFolderIndex - 1);
