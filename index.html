@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>나만의 심화 학습장 (최종 완성본)</title>
+  <title>나만의 심화 학습장</title>
   <style>
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -115,20 +115,25 @@
       height: 150px;
       resize: vertical;
     }
+    
     .form-toolbar {
       display: flex;
-      justify-content: space-between;
+      justify-content: flex-start;
+      gap: 6px;
       margin-bottom: 10px;
+      flex-wrap: wrap; 
     }
     .btn-tool {
       background-color: #34495e;
       color: white;
-      padding: 6px 12px;
-      font-size: 12px;
+      padding: 6px 10px;
+      font-size: 13px;
       border: none;
       border-radius: 4px;
       cursor: pointer;
     }
+    .btn-tool:active { opacity: 0.8; }
+    
     .form-buttons {
       display: flex;
       gap: 10px;
@@ -181,11 +186,19 @@
       transition: max-height 0.3s ease-out;
       background-color: #fafafa;
     }
+    
     .content-inner {
       padding: 16px;
       border-top: 1px solid #eee;
-      line-height: 1.5;
-      font-size: 14px;
+      line-height: 1.6;
+      font-size: 16px;
+    }
+
+    mark {
+      background-color: #fff200; 
+      padding: 2px 4px;
+      border-radius: 3px;
+      font-weight: bold;
     }
 
     .table-container {
@@ -196,7 +209,7 @@
     table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 13px;
+      font-size: 14px; 
       min-width: 280px;
     }
     th, td {
@@ -246,9 +259,14 @@
   <div id="addForm">
     <h3 class="modal-title" id="modalTitle">새 내용 추가</h3>
     <input type="text" id="inputTitle" placeholder="제목을 입력하세요">
+    
     <div class="form-toolbar">
-      <button class="btn-tool" id="insertTableBtn">📝 표 양식 넣기</button>
+      <button class="btn-tool" id="boldBtn"><b>B</b> 굵게</button>
+      <button class="btn-tool" id="highlightBtn" style="background-color:#f1c40f; color:black; font-weight:bold;">🖍️ 형광펜</button>
+      <button class="btn-tool" id="bulletBtn">➖ 들여쓰기</button>
+      <button class="btn-tool" id="insertTableBtn">📝 표 넣기</button>
     </div>
+    
     <textarea id="inputContent" placeholder="내용을 입력하세요."></textarea>
     <div class="form-buttons">
       <button class="btn btn-cancel" id="cancelBtn">취소</button>
@@ -259,7 +277,6 @@
   <div id="app"></div>
 
   <script>
-    // 🔥 우리가 만든 모든 기능들을 정리한 초기 데이터!
     const defaultData = [
       {
         title: "🎉 나만의 학습 앱 완성! (사용 설명서)",
@@ -277,24 +294,18 @@
         hiddenUntil: null
       },
       {
-        title: "3️⃣ 순서 변경 & 템플릿 (표 넣기)",
-        content: "• <b>순서 변경</b>: 하단의 <b>[⬆️ 위로]</b>, <b>[⬇️ 아래로]</b> 버튼을 눌러서 중요한 걸 위로 올리거나 비슷한 것끼리 묶어봐.<br>• <b>표 넣기</b>: 내용을 입력할 때 <b>[📝 표 양식 넣기]</b> 버튼을 누르면 표 코드가 쏙! 들어가서 정리하기 엄청 편해.",
+        title: "3️⃣ 글쓰기 도구 (굵게, 형광펜, 들여쓰기, 표)",
+        content: "• <b>굵게 강조하기</b>: 중요한 단어를 드래그하고 <b>[B 굵게]</b> 버튼을 누르면 진해져!<br>• <mark>형광펜 칠하기</mark>: 진짜 중요한 내용은 드래그하고 <b>[🖍️ 형광펜]</b>을 누르면 눈에 띄게 노란색이 칠해져.<br>&nbsp; - <b>들여쓰기</b>: 줄 중간에 커서를 두고 <b>[➖ 들여쓰기]</b>를 누르면 줄 맨 앞에 기호가 쏙 들어가서 목록 만들기가 편해.<br>• <b>표 넣기</b>: <b>[📝 표 넣기]</b> 버튼을 누르면 표 코드가 쏙! 들어가서 정리하기 엄청 편해.",
         hiddenUntil: null
       },
       {
         title: "4️⃣ 데이터 안전 보관 (백업 & 불러오기)",
         content: "앱을 끄더라도 데이터는 스마트폰에 안전하게 저장돼! 하지만 폰을 바꾸거나 만약을 대비하고 싶다면?<br><br>• <b>[백업 다운로드]</b>를 누르면 파일로 쏙 저장되고,<br>• 나중에 <b>[백업 불러오기]</b>로 그 파일을 선택하면 그대로 복구돼!",
         hiddenUntil: null
-      },
-      {
-        title: "📱 모바일 최적화 (아이폰 맞춤)",
-        content: "아이폰에서 글씨를 쓸 때 화면이 갑자기 커지지 않도록 <b>화면 흔들림 고정</b> 처리를 완벽하게 해뒀어. 그리고 버튼들도 모바일 화면에 맞춰서 <b>깔끔하게 두 줄</b>로 정렬되게 만들었지. 진짜 앱 같지?",
-        hiddenUntil: null
       }
     ];
 
     let studyData = JSON.parse(localStorage.getItem('myStudyApp'));
-    // 만약 저장된 데이터가 아예 없거나 비어있다면 설명서(defaultData)를 보여줌
     if (!studyData || studyData.length === 0) {
       studyData = defaultData;
     }
@@ -475,10 +486,74 @@
     document.getElementById('cancelBtn').addEventListener('click', closeForm);
     modalOverlay.addEventListener('click', closeForm);
 
+    // 굵게 버튼 기능
+    document.getElementById('boldBtn').addEventListener('click', () => {
+      const start = inputContent.selectionStart;
+      const end = inputContent.selectionEnd;
+      const text = inputContent.value;
+      const selectedText = text.substring(start, end);
+      const wrappedText = `<b>${selectedText}</b>`;
+      
+      inputContent.value = text.substring(0, start) + wrappedText + text.substring(end);
+      inputContent.focus();
+      
+      if (start === end) {
+        inputContent.selectionStart = start + 3;
+        inputContent.selectionEnd = start + 3;
+      } else {
+        inputContent.selectionStart = start;
+        inputContent.selectionEnd = start + wrappedText.length;
+      }
+    });
+
+    // 형광펜 버튼 기능
+    document.getElementById('highlightBtn').addEventListener('click', () => {
+      const start = inputContent.selectionStart;
+      const end = inputContent.selectionEnd;
+      const text = inputContent.value;
+      const selectedText = text.substring(start, end);
+      const wrappedText = `<mark>${selectedText}</mark>`;
+      
+      inputContent.value = text.substring(0, start) + wrappedText + text.substring(end);
+      inputContent.focus();
+      
+      if (start === end) {
+        inputContent.selectionStart = start + 6; 
+        inputContent.selectionEnd = start + 6;
+      } else {
+        inputContent.selectionStart = start;
+        inputContent.selectionEnd = start + wrappedText.length;
+      }
+    });
+
+    // 🔥 줄 맨 앞에 들여쓰기(&nbsp; - ) 추가하는 기능!
+    document.getElementById('bulletBtn').addEventListener('click', () => {
+      const pos = inputContent.selectionStart;
+      const text = inputContent.value;
+      
+      // 현재 커서 위치에서 가장 가까운 이전 줄바꿈(\n)을 찾아서 그 줄의 시작 위치를 구함
+      const lastNewline = text.lastIndexOf('\n', pos - 1);
+      const lineStart = lastNewline === -1 ? 0 : lastNewline + 1;
+      
+      const insertText = "&nbsp; - ";
+      
+      // 줄 맨 앞에 텍스트 삽입
+      inputContent.value = text.substring(0, lineStart) + insertText + text.substring(lineStart);
+      
+      // 커서를 원래 있던 위치 + 삽입된 글자 길이만큼 뒤로 이동시켜서 자연스럽게 이어 쓰게 함
+      inputContent.focus();
+      inputContent.selectionStart = pos + insertText.length;
+      inputContent.selectionEnd = pos + insertText.length;
+    });
+
     document.getElementById('insertTableBtn').addEventListener('click', () => {
       const tableTemplate = `\n<div class="table-container">\n  <table>\n    <tr>\n      <th>구분</th>\n      <th>제목1</th>\n      <th>제목2</th>\n    </tr>\n    <tr>\n      <td>항목1</td>\n      <td>내용1</td>\n      <td>내용2</td>\n    </tr>\n  </table>\n</div>\n`;
-      inputContent.value += tableTemplate;
+      const start = inputContent.selectionStart;
+      const text = inputContent.value;
+      inputContent.value = text.substring(0, start) + tableTemplate + text.substring(start);
       inputContent.focus();
+      inputContent.selectionStart = start + tableTemplate.length;
+      inputContent.selectionEnd = start + tableTemplate.length;
     });
 
     document.getElementById('saveBtn').addEventListener('click', () => {
