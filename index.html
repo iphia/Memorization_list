@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>나만의 심화 학습장</title>
+  <title>나만의 심화 학습장 (들여쓰기 기호 변경)</title>
   <style>
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -263,7 +263,7 @@
     <div class="form-toolbar">
       <button class="btn-tool" id="boldBtn"><b>B</b> 굵게</button>
       <button class="btn-tool" id="highlightBtn" style="background-color:#f1c40f; color:black; font-weight:bold;">🖍️ 형광펜</button>
-      <button class="btn-tool" id="bulletBtn">➖ 들여쓰기</button>
+      <button class="btn-tool" id="bulletBtn">• 들여쓰기</button>
       <button class="btn-tool" id="insertTableBtn">📝 표 넣기</button>
     </div>
     
@@ -295,7 +295,7 @@
       },
       {
         title: "3️⃣ 글쓰기 도구 (굵게, 형광펜, 들여쓰기, 표)",
-        content: "• <b>굵게 강조하기</b>: 중요한 단어를 드래그하고 <b>[B 굵게]</b> 버튼을 누르면 진해져!<br>• <mark>형광펜 칠하기</mark>: 진짜 중요한 내용은 드래그하고 <b>[🖍️ 형광펜]</b>을 누르면 눈에 띄게 노란색이 칠해져.<br>&nbsp; - <b>들여쓰기</b>: 줄 중간에 커서를 두고 <b>[➖ 들여쓰기]</b>를 누르면 줄 맨 앞에 기호가 쏙 들어가서 목록 만들기가 편해.<br>• <b>표 넣기</b>: <b>[📝 표 넣기]</b> 버튼을 누르면 표 코드가 쏙! 들어가서 정리하기 엄청 편해.",
+        content: "• <b>굵게 강조하기</b>: 중요한 단어를 드래그하고 <b>[B 굵게]</b> 버튼을 누르면 진해져!<br>• <mark>형광펜 칠하기</mark>: 진짜 중요한 내용은 드래그하고 <b>[🖍️ 형광펜]</b>을 누르면 눈에 띄게 노란색이 칠해져.<br>&nbsp; • <b>들여쓰기</b>: 줄 중간에 커서를 두고 <b>[• 들여쓰기]</b>를 누르면 줄 맨 앞에 동그란 기호가 쏙 들어가서 목록 만들기가 편해.<br>• <b>표 넣기</b>: <b>[📝 표 넣기]</b> 버튼을 누르면 표 코드가 쏙! 들어가서 정리하기 엄청 편해.",
         hiddenUntil: null
       },
       {
@@ -526,21 +526,18 @@
       }
     });
 
-    // 🔥 줄 맨 앞에 들여쓰기(&nbsp; - ) 추가하는 기능!
+    // 🔥 줄 맨 앞에 들여쓰기(&nbsp; • ) 추가하는 기능!
     document.getElementById('bulletBtn').addEventListener('click', () => {
       const pos = inputContent.selectionStart;
       const text = inputContent.value;
       
-      // 현재 커서 위치에서 가장 가까운 이전 줄바꿈(\n)을 찾아서 그 줄의 시작 위치를 구함
       const lastNewline = text.lastIndexOf('\n', pos - 1);
       const lineStart = lastNewline === -1 ? 0 : lastNewline + 1;
       
-      const insertText = "&nbsp; - ";
+      const insertText = "&nbsp; • ";
       
-      // 줄 맨 앞에 텍스트 삽입
       inputContent.value = text.substring(0, lineStart) + insertText + text.substring(lineStart);
       
-      // 커서를 원래 있던 위치 + 삽입된 글자 길이만큼 뒤로 이동시켜서 자연스럽게 이어 쓰게 함
       inputContent.focus();
       inputContent.selectionStart = pos + insertText.length;
       inputContent.selectionEnd = pos + insertText.length;
