@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>나만의 심화 학습장 (최종 완성본)</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: #f4f7f6;
+      margin: 0;
+      padding: 15px;
+      color: #333;
+    }
+    h1 {
+      text-align: center;
+      font-size: 22px;
+      margin-top: 10px;
+      margin-bottom: 20px;
+      color: #1a1a1a;
+    }
+    
+    .control-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .control-group {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap; 
+    }
+
+    .btn {
+      padding: 10px 15px;
+      font-size: 14px;
+      font-weight: bold;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      color: white;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      transition: opacity 0.2s;
+    }
+    .btn:active { opacity: 0.7; }
+    .btn-add { background-color: #4A90E2; }
+    .btn-show-hidden { background-color: #9b59b6; }
+    .btn-download { background-color: #27ae60; }
+    .btn-upload { background-color: #f39c12; }
+    
+    #statusText {
+      text-align: center;
+      font-size: 13px;
+      color: #7f8c8d;
+      margin-bottom: 20px;
+      font-weight: bold;
+    }
+
+    .btn-small {
+      margin-top: 10px;
+      padding: 8px 10px;
+      font-size: 12px;
+      margin-left: 4px;
+    }
+    .btn-move { background-color: #34495e; }
+    .btn-edit { background-color: #f39c12; }
+    .btn-delete { background-color: #e74c3c; }
+    .btn-hide { background-color: #8e44ad; }
+    .btn-unhide { background-color: #2ecc71; }
+
+    #modalOverlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      z-index: 998;
+      backdrop-filter: blur(2px); 
+    }
+
+    #addForm {
+      display: none;
+      position: fixed;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 90%; 
+      max-width: 400px;
+      background-color: white;
+      padding: 20px;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      z-index: 999;
+      box-sizing: border-box;
+    }
+    .modal-title {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 15px;
+      margin-top: 0;
+      text-align: center;
+    }
+
+    input[type="text"], textarea {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 10px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      box-sizing: border-box;
+      font-size: 16px; 
+      font-family: inherit;
+    }
+    textarea {
+      height: 150px;
+      resize: vertical;
+    }
+    .form-toolbar {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .btn-tool {
+      background-color: #34495e;
+      color: white;
+      padding: 6px 12px;
+      font-size: 12px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .form-buttons {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 10px;
+    }
+    .btn-save { background-color: #4A90E2; }
+    .btn-cancel { background-color: #95a5a6; }
+
+    #fileInput { display: none; }
+
+    .accordion {
+      background-color: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      margin-bottom: 12px;
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+    .accordion.is-hidden-item {
+      opacity: 0.7;
+      border: 2px dashed #9b59b6;
+    }
+    .accordion-header {
+      padding: 16px;
+      font-size: 16px;
+      font-weight: bold;
+      background-color: #ffffff;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .accordion.is-hidden-item .accordion-header {
+      background-color: #fcf4ff;
+    }
+    .accordion-header:active { background-color: #f9f9f9; }
+    .accordion-header::after {
+      content: '▼';
+      font-size: 12px;
+      color: #888;
+      transition: transform 0.3s;
+    }
+    .accordion.active .accordion-header::after {
+      transform: rotate(180deg);
+    }
+    .accordion-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease-out;
+      background-color: #fafafa;
+    }
+    .content-inner {
+      padding: 16px;
+      border-top: 1px solid #eee;
+      line-height: 1.5;
+      font-size: 14px;
+    }
+
+    .table-container {
+      overflow-x: auto;
+      margin-top: 10px;
+      margin-bottom: 10px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      min-width: 280px;
+    }
+    th, td {
+      border: 1px solid #e0e0e0;
+      padding: 8px;
+      text-align: left;
+    }
+    th { background-color: #4A90E2; color: white; }
+    tr:nth-child(even) { background-color: #f8f9fa; }
+    
+    code {
+      background-color: #eee;
+      padding: 2px 5px;
+      border-radius: 4px;
+      color: #c0392b;
+    }
+    
+    .action-buttons {
+      text-align: right;
+      margin-top: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>📚 나만의 심화 학습장</h1>
+
+  <div class="control-panel">
+    <div class="control-group">
+      <button class="btn btn-add" id="showAddBtn">새 내용 추가</button>
+      <button class="btn btn-show-hidden" id="toggleHiddenBtn">👀 숨긴 항목 보기</button>
+    </div>
+    <div class="control-group">
+      <button class="btn btn-download" id="downloadBtn">백업 다운로드</button>
+      <button class="btn btn-upload" id="uploadBtn">백업 불러오기</button>
+      <input type="file" id="fileInput" accept=".json">
+    </div>
+  </div>
+  
+  <div id="statusText"></div>
+
+  <div id="modalOverlay"></div>
+
+  <div id="addForm">
+    <h3 class="modal-title" id="modalTitle">새 내용 추가</h3>
+    <input type="text" id="inputTitle" placeholder="제목을 입력하세요">
+    <div class="form-toolbar">
+      <button class="btn-tool" id="insertTableBtn">📝 표 양식 넣기</button>
+    </div>
+    <textarea id="inputContent" placeholder="내용을 입력하세요."></textarea>
+    <div class="form-buttons">
+      <button class="btn btn-cancel" id="cancelBtn">취소</button>
+      <button class="btn btn-save" id="saveBtn">저장</button>
+    </div>
+  </div>
+
+  <div id="app"></div>
+
+  <script>
+    // 🔥 우리가 만든 모든 기능들을 정리한 초기 데이터!
+    const defaultData = [
+      {
+        title: "🎉 나만의 학습 앱 완성! (사용 설명서)",
+        content: "우리가 함께 만든 기능들을 쭉 정리해 줄게.<br><br>아래 항목들을 눌러서 어떤 기능들이 있는지 확인해 봐!",
+        hiddenUntil: null
+      },
+      {
+        title: "1️⃣ 기본 기능 (추가, 수정, 삭제)",
+        content: "• <b>새 내용 추가</b>: 상단 버튼을 누르면 화면 중앙에 깔끔한 팝업창이 떠서 내용을 바로 적을 수 있어. 새로 추가한 내용은 맨 위로 올라와!<br>• <b>수정</b>: 각 항목 하단의 <b>[✏️ 수정]</b> 버튼을 누르면 언제든 내용을 고칠 수 있어.<br>• <b>삭제</b>: 필요 없는 내용은 <b>[🗑️ 삭제]</b> 버튼으로 지울 수 있지.",
+        hiddenUntil: null
+      },
+      {
+        title: "2️⃣ 똑똑한 복습 기능 (3일 감추기)",
+        content: "• <b>[⏱️ 감추기]</b> 버튼을 누르면 완벽하게 외운 내용을 목록에서 숨길 수 있어. 정확히 72시간(3일) 뒤에 다시 나타나니까 복습하기 딱 좋지!<br>• 숨긴 내용이 궁금하다면 상단의 <b>[👀 숨긴 항목 보기]</b> 버튼을 눌러봐. 보라색 점선 테두리로 나타나고, <b>[👁️ 숨김 해제]</b>를 누르면 바로 원상복구 돼.",
+        hiddenUntil: null
+      },
+      {
+        title: "3️⃣ 순서 변경 & 템플릿 (표 넣기)",
+        content: "• <b>순서 변경</b>: 하단의 <b>[⬆️ 위로]</b>, <b>[⬇️ 아래로]</b> 버튼을 눌러서 중요한 걸 위로 올리거나 비슷한 것끼리 묶어봐.<br>• <b>표 넣기</b>: 내용을 입력할 때 <b>[📝 표 양식 넣기]</b> 버튼을 누르면 표 코드가 쏙! 들어가서 정리하기 엄청 편해.",
+        hiddenUntil: null
+      },
+      {
+        title: "4️⃣ 데이터 안전 보관 (백업 & 불러오기)",
+        content: "앱을 끄더라도 데이터는 스마트폰에 안전하게 저장돼! 하지만 폰을 바꾸거나 만약을 대비하고 싶다면?<br><br>• <b>[백업 다운로드]</b>를 누르면 파일로 쏙 저장되고,<br>• 나중에 <b>[백업 불러오기]</b>로 그 파일을 선택하면 그대로 복구돼!",
+        hiddenUntil: null
+      },
+      {
+        title: "📱 모바일 최적화 (아이폰 맞춤)",
+        content: "아이폰에서 글씨를 쓸 때 화면이 갑자기 커지지 않도록 <b>화면 흔들림 고정</b> 처리를 완벽하게 해뒀어. 그리고 버튼들도 모바일 화면에 맞춰서 <b>깔끔하게 두 줄</b>로 정렬되게 만들었지. 진짜 앱 같지?",
+        hiddenUntil: null
+      }
+    ];
+
+    let studyData = JSON.parse(localStorage.getItem('myStudyApp'));
+    // 만약 저장된 데이터가 아예 없거나 비어있다면 설명서(defaultData)를 보여줌
+    if (!studyData || studyData.length === 0) {
+      studyData = defaultData;
+    }
+    
+    let editingIndex = -1;
+    let isShowingHidden = false;
+
+    const app = document.getElementById('app');
+    const modalOverlay = document.getElementById('modalOverlay');
+    const addForm = document.getElementById('addForm');
+    const inputTitle = document.getElementById('inputTitle');
+    const inputContent = document.getElementById('inputContent');
+    const saveBtn = document.getElementById('saveBtn');
+    const modalTitle = document.getElementById('modalTitle');
+    const toggleHiddenBtn = document.getElementById('toggleHiddenBtn');
+    const statusText = document.getElementById('statusText');
+
+    function renderList() {
+      app.innerHTML = '';
+      const now = Date.now(); 
+      let hiddenCount = 0;
+
+      studyData.forEach(item => {
+        if (item.hiddenUntil && item.hiddenUntil > now) {
+          hiddenCount++;
+        }
+      });
+
+      if (hiddenCount > 0) {
+        statusText.innerHTML = `현재 숨김 처리된 항목이 <span style="color:#e74c3c;">${hiddenCount}개</span> 있습니다.`;
+      } else {
+        statusText.innerHTML = `현재 숨김 처리된 항목이 없습니다.`;
+      }
+
+      studyData.forEach((item, index) => {
+        const isHidden = item.hiddenUntil && item.hiddenUntil > now;
+
+        if (isHidden && !isShowingHidden) {
+          return; 
+        }
+
+        const accordion = document.createElement('div');
+        accordion.className = 'accordion';
+        if (isHidden) {
+          accordion.classList.add('is-hidden-item'); 
+        }
+
+        let displayContent = item.content.replace(/\n/g, '<br>');
+
+        let buttonsHtml = '';
+        if (index > 0) buttonsHtml += `<button class="btn btn-move btn-small" onclick="moveUp(${index})">⬆️ 위로</button>`;
+        if (index < studyData.length - 1) buttonsHtml += `<button class="btn btn-move btn-small" onclick="moveDown(${index})">⬇️ 아래로</button>`;
+        
+        buttonsHtml += `<button class="btn btn-edit btn-small" onclick="editItem(${index})">✏️ 수정</button>`;
+        
+        if (isHidden) {
+          buttonsHtml += `<button class="btn btn-unhide btn-small" onclick="unhideItem(${index})">👁️ 숨김 해제</button>`;
+        } else {
+          buttonsHtml += `<button class="btn btn-hide btn-small" onclick="hideItem(${index})">⏱️ 감추기</button>`;
+        }
+        buttonsHtml += `<button class="btn btn-delete btn-small" onclick="deleteItem(${index})">🗑️ 삭제</button>`;
+
+        accordion.innerHTML = `
+          <div class="accordion-header">
+            ${isHidden ? '🙈 [숨김 중] ' : ''}${item.title}
+          </div>
+          <div class="accordion-content">
+            <div class="content-inner">
+              ${displayContent}
+              <div class="action-buttons">
+                ${buttonsHtml}
+              </div>
+            </div>
+          </div>
+        `;
+        app.appendChild(accordion);
+
+        const header = accordion.querySelector('.accordion-header');
+        const content = accordion.querySelector('.accordion-content');
+
+        header.addEventListener('click', () => {
+          const isActive = accordion.classList.contains('active');
+          if (!isActive) {
+            accordion.classList.add('active');
+            content.style.maxHeight = content.scrollHeight + 100 + "px"; 
+          } else {
+            accordion.classList.remove('active');
+            content.style.maxHeight = null;
+          }
+        });
+      });
+    }
+
+    function saveToLocal() {
+      localStorage.setItem('myStudyApp', JSON.stringify(studyData));
+      renderList();
+    }
+
+    toggleHiddenBtn.addEventListener('click', () => {
+      isShowingHidden = !isShowingHidden;
+      if (isShowingHidden) {
+        toggleHiddenBtn.textContent = '닫기 (숨긴 항목)';
+        toggleHiddenBtn.style.backgroundColor = '#8e44ad';
+      } else {
+        toggleHiddenBtn.textContent = '👀 숨긴 항목 보기';
+        toggleHiddenBtn.style.backgroundColor = '#9b59b6';
+      }
+      renderList();
+    });
+
+    window.moveUp = function(index) {
+      if (index > 0) {
+        const temp = studyData[index];
+        studyData[index] = studyData[index - 1];
+        studyData[index - 1] = temp;
+        saveToLocal();
+      }
+    };
+
+    window.moveDown = function(index) {
+      if (index < studyData.length - 1) {
+        const temp = studyData[index];
+        studyData[index] = studyData[index + 1];
+        studyData[index + 1] = temp;
+        saveToLocal();
+      }
+    };
+
+    window.editItem = function(index) {
+      editingIndex = index;
+      inputTitle.value = studyData[index].title;
+      inputContent.value = studyData[index].content;
+      
+      modalTitle.textContent = '내용 수정하기';
+      saveBtn.textContent = '수정 완료'; 
+      
+      modalOverlay.style.display = 'block';
+      addForm.style.display = 'block';
+    };
+
+    window.hideItem = function(index) {
+      if(confirm('이 내용을 3일 동안 숨기시겠습니까?')) {
+        const threeDaysInMs = 3 * 24 * 60 * 60 * 1000; 
+        studyData[index].hiddenUntil = Date.now() + threeDaysInMs;
+        saveToLocal();
+      }
+    };
+
+    window.unhideItem = function(index) {
+      studyData[index].hiddenUntil = null;
+      saveToLocal();
+    };
+
+    window.deleteItem = function(index) {
+      if(confirm('정말 삭제하시겠습니까?')) {
+        studyData.splice(index, 1);
+        saveToLocal();
+      }
+    };
+
+    function closeForm() {
+      modalOverlay.style.display = 'none';
+      addForm.style.display = 'none';
+      inputTitle.value = '';
+      inputContent.value = '';
+      editingIndex = -1;
+    }
+
+    document.getElementById('showAddBtn').addEventListener('click', () => {
+      closeForm(); 
+      modalTitle.textContent = '새 내용 추가';
+      saveBtn.textContent = '저장';
+      
+      modalOverlay.style.display = 'block';
+      addForm.style.display = 'block';
+    });
+
+    document.getElementById('cancelBtn').addEventListener('click', closeForm);
+    modalOverlay.addEventListener('click', closeForm);
+
+    document.getElementById('insertTableBtn').addEventListener('click', () => {
+      const tableTemplate = `\n<div class="table-container">\n  <table>\n    <tr>\n      <th>구분</th>\n      <th>제목1</th>\n      <th>제목2</th>\n    </tr>\n    <tr>\n      <td>항목1</td>\n      <td>내용1</td>\n      <td>내용2</td>\n    </tr>\n  </table>\n</div>\n`;
+      inputContent.value += tableTemplate;
+      inputContent.focus();
+    });
+
+    document.getElementById('saveBtn').addEventListener('click', () => {
+      if (!inputTitle.value || !inputContent.value) {
+        alert('제목과 내용을 모두 입력해주세요!');
+        return;
+      }
+      
+      if (editingIndex > -1) {
+        studyData[editingIndex].title = inputTitle.value;
+        studyData[editingIndex].content = inputContent.value;
+      } else {
+        studyData.unshift({ 
+          title: inputTitle.value, 
+          content: inputContent.value,
+          hiddenUntil: null
+        });
+      }
+      
+      saveToLocal();
+      closeForm();
+    });
+
+    document.getElementById('downloadBtn').addEventListener('click', () => {
+      const dataStr = JSON.stringify(studyData, null, 2);
+      const blob = new Blob([dataStr], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = "my_study_backup.json";
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    const fileInput = document.getElementById('fileInput');
+    document.getElementById('uploadBtn').addEventListener('click', () => {
+      fileInput.click();
+    });
+
+    fileInput.addEventListener('change', (event) => {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const uploadedData = JSON.parse(e.target.result);
+          if (Array.isArray(uploadedData)) {
+            studyData = uploadedData;
+            saveToLocal();
+            alert('백업 데이터를 성공적으로 불러왔습니다!');
+          } else {
+            alert('잘못된 백업 파일 형식입니다.');
+          }
+        } catch (error) {
+          alert('파일을 읽는 중 오류가 발생했습니다.');
+        }
+      };
+      reader.readAsText(file);
+      fileInput.value = '';
+    });
+
+    renderList();
+  </script>
+
+</body>
+</html>
