@@ -3,22 +3,27 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="나만의학습장">
-  <link rel="apple-touch-icon" href="icon.png">
+  <link rel="apple-touch-icon" href="https://placehold.co/180x180/4A90E2/FFFFFF/png?text=Study">
   
   <title>나만의 심화 학습장</title>
   <style>
+    /* 🔥 body는 고정시키고, 높이를 화면 100%로 꽉 채움 */
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       background-color: #f4f7f6;
       margin: 0;
       padding: 15px;
-      /* 아이폰 노치 디자인 등에서 상단 여유 공간 확보 */
       padding-top: env(safe-area-inset-top, 15px);
+      padding-bottom: env(safe-area-inset-bottom, 15px); 
       color: #333;
+      display: flex;
+      flex-direction: column;
+      height: 100vh; /* 화면 꽉 차게 */
+      box-sizing: border-box;
+      overflow: hidden; /* 🔥 전체 화면 스크롤 금지! */
     }
     h1 {
       text-align: center;
@@ -26,55 +31,145 @@
       margin-top: 10px;
       margin-bottom: 20px;
       color: #1a1a1a;
+      flex-shrink: 0; 
     }
     
-    .control-panel {
+    .folder-tabs {
       display: flex;
-      flex-direction: column;
+      overflow-x: auto;
       gap: 10px;
-      margin-bottom: 10px;
+      margin-bottom: 15px;
+      padding-bottom: 5px;
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+      flex-shrink: 0;
     }
-    .control-group {
-      display: flex;
-      justify-content: center;
-      gap: 8px;
-      flex-wrap: wrap; 
+    .folder-tabs::-webkit-scrollbar {
+      display: none;
     }
-
-    .btn {
-      padding: 10px 15px;
+    .folder-tab {
+      padding: 8px 16px;
+      background-color: #e0e6ed;
+      border-radius: 20px;
+      white-space: nowrap;
+      cursor: pointer;
       font-size: 14px;
       font-weight: bold;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      color: white;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-      transition: opacity 0.2s;
+      color: #555;
+      transition: all 0.2s;
     }
-    .btn:active { opacity: 0.7; }
-    .btn-add { background-color: #4A90E2; }
-    .btn-show-hidden { background-color: #9b59b6; }
-    .btn-download { background-color: #27ae60; }
-    .btn-upload { background-color: #f39c12; }
-    
+    .folder-tab.active {
+      background-color: #4A90E2;
+      color: white;
+      box-shadow: 0 3px 6px rgba(74, 144, 226, 0.3);
+    }
+    .folder-add {
+      padding: 8px 16px;
+      background-color: #fff;
+      border: 1px dashed #aaa;
+      border-radius: 20px;
+      white-space: nowrap;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: bold;
+      color: #777;
+    }
+
     #statusText {
       text-align: center;
       font-size: 13px;
       color: #7f8c8d;
-      margin-bottom: 20px;
+      margin-bottom: 15px;
       font-weight: bold;
+      flex-shrink: 0;
     }
 
-    .btn-small {
-      margin-top: 10px;
-      padding: 8px 10px;
-      font-size: 12px;
-      margin-left: 4px;
+    /* 🔥 목록이 들어가는 상자만 위아래로 스크롤 되도록 설정! */
+    #swipeContainer {
+      flex-grow: 1;
+      width: 100%;
+      overflow-y: auto; /* 세로 스크롤 허용 */
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch; /* 아이폰에서 부드러운 스크롤 */
     }
+    #app {
+      width: 100%;
+      transition: transform 0.3s ease, opacity 0.3s ease;
+      padding-bottom: 80px; /* 스크롤 맨 밑으로 내렸을 때 플로팅 버튼에 안 가려지게 여백 추가 */
+    }
+
+    .fab-container {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 990; 
+      display: flex;
+      flex-direction: column-reverse; 
+      align-items: flex-end;
+      gap: 15px;
+      pointer-events: none; 
+    }
+    .fab-main {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background-color: #4A90E2;
+      color: white;
+      font-size: 30px;
+      font-weight: 300;
+      border: none;
+      box-shadow: 0 4px 15px rgba(74, 144, 226, 0.4);
+      cursor: pointer;
+      transition: transform 0.3s ease, background-color 0.3s ease;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      line-height: 1;
+      padding-bottom: 4px; 
+      pointer-events: auto; 
+    }
+    .fab-main.active {
+      transform: rotate(45deg);
+      background-color: #e74c3c; 
+      box-shadow: 0 4px 15px rgba(231, 76, 60, 0.4);
+    }
+    .fab-menu {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 10px;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(20px);
+      transition: all 0.3s ease;
+      pointer-events: none; 
+    }
+    .fab-menu.active {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+      pointer-events: auto; 
+    }
+    .fab-item {
+      padding: 12px 20px;
+      border-radius: 30px;
+      background-color: white;
+      color: #333;
+      border: 1px solid #eaeaea;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      font-weight: bold;
+      font-size: 14px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background-color 0.2s;
+    }
+    .fab-item:active {
+      background-color: #f0f0f0;
+    }
+
+    .btn-small { margin-top: 10px; padding: 8px 10px; font-size: 12px; margin-left: 4px; border: none; border-radius: 6px; color: white; cursor: pointer; }
     .btn-move { background-color: #34495e; }
     .btn-edit { background-color: #f39c12; }
-    .btn-delete { background-color: #e74c3c; }
     .btn-hide { background-color: #8e44ad; }
     .btn-unhide { background-color: #2ecc71; }
 
@@ -86,8 +181,7 @@
       z-index: 998;
       backdrop-filter: blur(2px); 
     }
-
-    #addForm {
+    .modal-box {
       display: none;
       position: fixed;
       top: 50%; left: 50%;
@@ -109,277 +203,351 @@
       text-align: center;
     }
 
-    input[type="text"], textarea {
-      width: 100%;
-      padding: 10px;
-      margin-bottom: 10px;
-      border: 1px solid #ddd;
-      border-radius: 6px;
-      box-sizing: border-box;
-      font-size: 16px; 
-      font-family: inherit;
+    .btn-full { width: 100%; padding: 12px; margin-bottom: 10px; border-radius: 8px; border: none; font-size: 14px; font-weight: bold; cursor: pointer; color: white; }
+    .btn-full:last-child { margin-bottom: 0; }
+    .bg-blue { background-color: #4A90E2; }
+    .bg-red { background-color: #e74c3c; }
+    .bg-gray { background-color: #95a5a6; }
+
+    input[type="text"], textarea, select {
+      width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ddd;
+      border-radius: 6px; box-sizing: border-box; font-size: 16px; font-family: inherit;
     }
-    textarea {
-      height: 150px;
-      resize: vertical;
-    }
+    textarea { height: 150px; resize: vertical; }
     
-    .form-toolbar {
-      display: flex;
-      justify-content: flex-start;
-      gap: 6px;
-      margin-bottom: 10px;
-      flex-wrap: wrap; 
-    }
-    .btn-tool {
-      background-color: #34495e;
-      color: white;
-      padding: 6px 10px;
-      font-size: 13px;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    .btn-tool:active { opacity: 0.8; }
+    .form-toolbar { display: flex; justify-content: flex-start; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
+    .btn-tool { background-color: #34495e; color: white; padding: 6px 10px; font-size: 13px; border: none; border-radius: 4px; cursor: pointer; }
     
-    .form-buttons {
-      display: flex;
-      gap: 10px;
-      justify-content: flex-end;
-      margin-top: 10px;
-    }
-    .btn-save { background-color: #4A90E2; }
-    .btn-cancel { background-color: #95a5a6; }
+    .form-buttons { display: flex; gap: 10px; justify-content: flex-end; margin-top: 10px; }
+    .btn-save { background-color: #4A90E2; color: white; padding: 10px 15px; border:none; border-radius:8px; font-weight:bold; }
+    .btn-cancel { background-color: #95a5a6; color: white; padding: 10px 15px; border:none; border-radius:8px; font-weight:bold; }
 
     #fileInput { display: none; }
 
     .accordion {
-      background-color: white;
-      border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-      margin-bottom: 12px;
-      overflow: hidden;
-      transition: all 0.3s ease;
+      background-color: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      margin-bottom: 12px; overflow: hidden; transition: all 0.3s ease;
     }
-    .accordion.is-hidden-item {
-      opacity: 0.7;
-      border: 2px dashed #9b59b6;
-    }
+    .accordion.is-hidden-item { opacity: 0.7; border: 2px dashed #9b59b6; }
     .accordion-header {
-      padding: 16px;
-      font-size: 16px;
-      font-weight: bold;
-      background-color: #ffffff;
-      cursor: pointer;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+      padding: 16px; font-size: 16px; font-weight: bold; background-color: #ffffff;
+      cursor: pointer; display: flex; justify-content: space-between; align-items: center;
+      -webkit-user-select: none; user-select: none;
     }
-    .accordion.is-hidden-item .accordion-header {
-      background-color: #fcf4ff;
-    }
+    .accordion.is-hidden-item .accordion-header { background-color: #fcf4ff; }
     .accordion-header:active { background-color: #f9f9f9; }
-    .accordion-header::after {
-      content: '▼';
-      font-size: 12px;
-      color: #888;
-      transition: transform 0.3s;
-    }
-    .accordion.active .accordion-header::after {
-      transform: rotate(180deg);
-    }
-    .accordion-content {
-      max-height: 0;
-      overflow: hidden;
-      transition: max-height 0.3s ease-out;
-      background-color: #fafafa;
-    }
+    .accordion-header::after { content: '▼'; font-size: 12px; color: #888; transition: transform 0.3s; }
+    .accordion.active .accordion-header::after { transform: rotate(180deg); }
+    .accordion-content { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; background-color: #fafafa; }
     
-    .content-inner {
-      padding: 16px;
-      border-top: 1px solid #eee;
-      line-height: 1.6;
-      font-size: 16px;
-    }
-
-    mark {
-      background-color: #fff200; 
-      padding: 2px 4px;
-      border-radius: 3px;
-      font-weight: bold;
-    }
-
-    .table-container {
-      overflow-x: auto;
-      margin-top: 10px;
-      margin-bottom: 10px;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 14px; 
-      min-width: 280px;
-    }
-    th, td {
-      border: 1px solid #e0e0e0;
-      padding: 8px;
-      text-align: left;
-    }
+    .content-inner { padding: 16px; border-top: 1px solid #eee; line-height: 1.6; font-size: 16px; }
+    mark { background-color: #fff200; padding: 2px 4px; border-radius: 3px; font-weight: bold; }
+    .table-container { overflow-x: auto; margin-top: 10px; margin-bottom: 10px; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 280px; }
+    th, td { border: 1px solid #e0e0e0; padding: 8px; text-align: left; }
     th { background-color: #4A90E2; color: white; }
     tr:nth-child(even) { background-color: #f8f9fa; }
-    
-    code {
-      background-color: #eee;
-      padding: 2px 5px;
-      border-radius: 4px;
-      color: #c0392b;
-    }
-    
-    .action-buttons {
-      text-align: right;
-      margin-top: 10px;
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: flex-end;
-    }
+    code { background-color: #eee; padding: 2px 5px; border-radius: 4px; color: #c0392b; }
+    .action-buttons { text-align: right; margin-top: 10px; display: flex; flex-wrap: wrap; justify-content: flex-end; }
   </style>
 </head>
 <body>
 
   <h1>📚 나만의 심화 학습장</h1>
 
-  <div class="control-panel">
-    <div class="control-group">
-      <button class="btn btn-add" id="showAddBtn">새 내용 추가</button>
-      <button class="btn btn-show-hidden" id="toggleHiddenBtn">👀 숨긴 항목 보기</button>
-    </div>
-    <div class="control-group">
-      <button class="btn btn-download" id="downloadBtn">백업 다운로드</button>
-      <button class="btn btn-upload" id="uploadBtn">백업 불러오기</button>
-      <input type="file" id="fileInput" accept=".json">
+  <div class="folder-tabs" id="folderTabs"></div>
+  <div id="statusText"></div>
+
+  <div id="swipeContainer">
+    <div id="app"></div>
+  </div>
+
+  <div class="fab-container">
+    <button class="fab-main" id="fabMain">+</button>
+    <div class="fab-menu" id="fabMenu">
+      <button class="fab-item" id="showAddBtn">✍️ 새 내용 추가</button>
+      <button class="fab-item" id="toggleHiddenBtn">👀 숨긴 항목 보기</button>
+      <button class="fab-item" id="downloadBtn">📥 백업 다운로드</button>
+      <button class="fab-item" id="uploadBtn">📤 백업 불러오기</button>
     </div>
   </div>
-  
-  <div id="statusText"></div>
+
+  <input type="file" id="fileInput" accept=".json">
 
   <div id="modalOverlay"></div>
 
-  <div id="addForm">
+  <div id="addForm" class="modal-box">
     <h3 class="modal-title" id="modalTitle">새 내용 추가</h3>
     <input type="text" id="inputTitle" placeholder="제목을 입력하세요">
-    
     <div class="form-toolbar">
       <button class="btn-tool" id="boldBtn"><b>B</b> 굵게</button>
       <button class="btn-tool" id="highlightBtn" style="background-color:#f1c40f; color:black; font-weight:bold;">🖍️ 형광펜</button>
       <button class="btn-tool" id="bulletBtn">• 들여쓰기</button>
       <button class="btn-tool" id="insertTableBtn">📝 표 넣기</button>
     </div>
-    
     <textarea id="inputContent" placeholder="내용을 입력하세요."></textarea>
     <div class="form-buttons">
-      <button class="btn btn-cancel" id="cancelBtn">취소</button>
+      <button class="btn btn-cancel" onclick="closeModals()">취소</button>
       <button class="btn btn-save" id="saveBtn">저장</button>
     </div>
   </div>
 
-  <div id="app"></div>
+  <div id="folderManageModal" class="modal-box">
+    <h3 class="modal-title">폴더 관리</h3>
+    <input type="text" id="editFolderNameInput" placeholder="새 폴더 이름">
+    <button class="btn-full bg-blue" id="btnRenameFolder">이름 변경하기</button>
+    <button class="btn-full bg-red" id="btnDeleteFolderPrep">폴더 삭제하기</button>
+    <button class="btn-full bg-gray" onclick="closeModals()">닫기</button>
+  </div>
+
+  <div id="folderDeleteModal" class="modal-box">
+    <h3 class="modal-title">폴더 삭제</h3>
+    <p style="font-size:14px; text-align:center; color:#555; line-height:1.5;">이 폴더 안에 있는 내용은<br>어떻게 할까요?</p>
+    <button class="btn-full bg-blue" id="btnMoveToDefault">기본 노트로 모두 이동</button>
+    <button class="btn-full bg-red" id="btnDeleteAllInside">내용까지 통째로 삭제</button>
+    <button class="btn-full bg-gray" onclick="closeModals()">취소</button>
+  </div>
+
+  <div id="itemManageModal" class="modal-box">
+    <h3 class="modal-title">항목 관리</h3>
+    <p style="font-size:14px; text-align:center; color:#555; margin-bottom:5px;">다른 폴더로 이동</p>
+    <select id="folderSelect"></select>
+    <button class="btn-full bg-blue" id="btnMoveItem">선택한 폴더로 이동</button>
+    <hr style="border:0; border-top:1px solid #eee; margin:15px 0;">
+    <button class="btn-full bg-red" id="btnDeleteItem">🗑️ 이 항목 영구 삭제</button>
+    <button class="btn-full bg-gray" onclick="closeModals()">닫기</button>
+  </div>
 
   <script>
     const defaultData = [
       {
-        title: "🎉 나만의 학습 앱 완성! (사용 설명서)",
-        content: "우리가 함께 만든 기능들을 쭉 정리해 줄게.<br><br>아래 항목들을 눌러서 어떤 기능들이 있는지 확인해 봐!",
+        folder: "기본 노트",
+        title: "🎉 나만의 학습 앱 완벽 가이드!",
+        content: "우리가 함께 만든 숨겨진 기능들을 정리해 줄게.<br><br>아래 설명들을 읽어보면 앱을 200% 활용할 수 있어!",
         hiddenUntil: null
       },
       {
-        title: "1️⃣ 기본 기능 (추가, 수정, 삭제)",
-        content: "• <b>새 내용 추가</b>: 상단 버튼을 누르면 화면 중앙에 깔끔한 팝업창이 떠서 내용을 바로 적을 수 있어. 새로 추가한 내용은 맨 위로 올라와!<br>• <b>수정</b>: 각 항목 하단의 <b>[✏️ 수정]</b> 버튼을 누르면 언제든 내용을 고칠 수 있어.<br>• <b>삭제</b>: 필요 없는 내용은 <b>[🗑️ 삭제]</b> 버튼으로 지울 수 있지.",
+        folder: "기본 노트",
+        title: "📱 부분 스크롤 적용",
+        content: "앱의 제목과 폴더 탭은 항상 고정되어 있고, <b>목록 부분만 부드럽게 위아래로 스크롤</b>됩니다. 진짜 앱 같죠?",
         hiddenUntil: null
       },
       {
-        title: "2️⃣ 똑똑한 복습 기능 (3일 감추기)",
-        content: "• <b>[⏱️ 감추기]</b> 버튼을 누르면 완벽하게 외운 내용을 목록에서 숨길 수 있어. 정확히 72시간(3일) 뒤에 다시 나타나니까 복습하기 딱 좋지!<br>• 숨긴 내용이 궁금하다면 상단의 <b>[👀 숨긴 항목 보기]</b> 버튼을 눌러봐. 보라색 점선 테두리로 나타나고, <b>[👁️ 숨김 해제]</b>를 누르면 바로 원상복구 돼.",
+        folder: "기본 노트",
+        title: "📂 폴더 기능 완전 정복",
+        content: "• <b>폴더 이동</b>: 위쪽 탭을 누르거나, 화면 빈 곳 <b>어디든 좌우로 스와이프</b>해봐!<br>• <b>폴더 관리</b>: 파랗게 켜진 현재 폴더 탭을 <b>한 번 더 터치</b>하면 폴더 이름을 바꾸거나 지울 수 있어.",
         hiddenUntil: null
       },
       {
-        title: "3️⃣ 글쓰기 도구 (굵게, 형광펜, 들여쓰기, 표)",
-        content: "• <b>굵게 강조하기</b>: 중요한 단어를 드래그하고 <b>[B 굵게]</b> 버튼을 누르면 진해져!<br>• <mark>형광펜 칠하기</mark>: 진짜 중요한 내용은 드래그하고 <b>[🖍️ 형광펜]</b>을 누르면 눈에 띄게 노란색이 칠해져.<br>&nbsp; • <b>들여쓰기</b>: 줄 중간에 커서를 두고 <b>[• 들여쓰기]</b>를 누르면 줄 맨 앞에 동그란 기호가 쏙 들어가서 목록 만들기가 편해.<br>• <b>표 넣기</b>: <b>[📝 표 넣기]</b> 버튼을 누르면 표 코드가 쏙! 들어가서 정리하기 엄청 편해.",
+        folder: "기본 노트",
+        title: "👆 항목 꾹~ 누르기 (롱프레스)",
+        content: "외울 항목(제목)을 <b>0.5초 동안 꾹~ 누르고 있어봐!</b><br><br>그러면 내용 안으로 들어가지 않고도 항목을 <b>다른 폴더로 이동</b>시키거나 <b>완전히 삭제</b>할 수 있는 깔끔한 관리 창이 나타나.",
         hiddenUntil: null
       },
       {
-        title: "4️⃣ 데이터 안전 보관 (백업 & 불러오기)",
-        content: "앱을 끄더라도 데이터는 스마트폰에 안전하게 저장돼! 하지만 폰을 바꾸거나 만약을 대비하고 싶다면?<br><br>• <b>[백업 다운로드]</b>를 누르면 파일로 쏙 저장되고,<br>• 나중에 <b>[백업 불러오기]</b>로 그 파일을 선택하면 그대로 복구돼!",
-        hiddenUntil: null
-      },
-      {
-        title: "📱 홈 화면 추가 꿀팁!",
-        content: "아이폰 사파리 하단의 <b>[공유]</b> 버튼을 누르고 <b>[홈 화면에 추가]</b>를 선택해 보세요.<br>사파리 주소창 없이 완벽한 전체화면 앱으로 실행됩니다. 아이콘도 예쁘게 뜰 거예요!",
+        folder: "기본 노트",
+        title: "📝 글쓰기 도구 & 3일 감추기",
+        content: "• 수정 창에서 드래그 후 <b>굵게, 형광펜</b>을 칠할 수 있고 <b>들여쓰기, 표 넣기</b>도 원터치야.<br>• 다 외운 건 <b>[⏱️ 감추기]</b>를 누르면 목록에서 사라졌다가 3일 뒤에 복습하라고 짠! 나타나.",
         hiddenUntil: null
       }
     ];
 
+    let folders = JSON.parse(localStorage.getItem('myStudyFolders')) || ["기본 노트"];
     let studyData = JSON.parse(localStorage.getItem('myStudyApp'));
+    
     if (!studyData || studyData.length === 0) {
       studyData = defaultData;
+    } else {
+      studyData.forEach(item => { if (!item.folder) item.folder = folders[0]; });
     }
-    
+
+    let currentFolderIndex = 0;
     let editingIndex = -1;
+    let managingFolderIndex = -1;
+    let managingItemIndex = -1;
     let isShowingHidden = false;
 
     const app = document.getElementById('app');
+    const folderTabs = document.getElementById('folderTabs');
     const modalOverlay = document.getElementById('modalOverlay');
     const addForm = document.getElementById('addForm');
-    const inputTitle = document.getElementById('inputTitle');
-    const inputContent = document.getElementById('inputContent');
-    const saveBtn = document.getElementById('saveBtn');
-    const modalTitle = document.getElementById('modalTitle');
-    const toggleHiddenBtn = document.getElementById('toggleHiddenBtn');
     const statusText = document.getElementById('statusText');
+
+    const fabMain = document.getElementById('fabMain');
+    const fabMenu = document.getElementById('fabMenu');
+
+    fabMain.addEventListener('click', () => {
+      fabMain.classList.toggle('active');
+      fabMenu.classList.toggle('active');
+    });
+
+    function closeFab() {
+      fabMain.classList.remove('active');
+      fabMenu.classList.remove('active');
+    }
+
+    document.addEventListener('click', (event) => {
+      const fabContainer = document.querySelector('.fab-container');
+      if (!fabContainer.contains(event.target) && fabMain.classList.contains('active')) {
+        closeFab();
+      }
+    });
+
+    function saveToLocal() {
+      localStorage.setItem('myStudyFolders', JSON.stringify(folders));
+      localStorage.setItem('myStudyApp', JSON.stringify(studyData));
+      renderFolders();
+      renderList();
+    }
+
+    window.closeModals = function() {
+      modalOverlay.style.display = 'none';
+      addForm.style.display = 'none';
+      document.getElementById('folderManageModal').style.display = 'none';
+      document.getElementById('folderDeleteModal').style.display = 'none';
+      document.getElementById('itemManageModal').style.display = 'none';
+      managingFolderIndex = -1;
+      managingItemIndex = -1;
+      editingIndex = -1;
+      closeFab(); 
+    }
+
+    modalOverlay.addEventListener('click', closeModals);
+
+    function renderFolders() {
+      folderTabs.innerHTML = '';
+      folders.forEach((f, i) => {
+        const div = document.createElement('div');
+        div.className = 'folder-tab ' + (i === currentFolderIndex ? 'active' : '');
+        div.textContent = f;
+        div.onclick = () => {
+          if (i === currentFolderIndex) {
+            managingFolderIndex = i;
+            document.getElementById('editFolderNameInput').value = f;
+            modalOverlay.style.display = 'block';
+            document.getElementById('folderManageModal').style.display = 'block';
+          } else {
+            switchFolder(i);
+          }
+        };
+        folderTabs.appendChild(div);
+      });
+      
+      const addBtn = document.createElement('div');
+      addBtn.className = 'folder-add';
+      addBtn.textContent = '+ 새 폴더';
+      addBtn.onclick = () => {
+        const newName = prompt("새로운 폴더 이름을 입력하세요.");
+        if (newName && newName.trim() !== '') {
+          if (!folders.includes(newName.trim())) {
+            folders.push(newName.trim());
+            saveToLocal();
+            switchFolder(folders.length - 1);
+          } else {
+            alert('이미 존재하는 폴더 이름입니다.');
+          }
+        }
+      };
+      folderTabs.appendChild(addBtn);
+    }
+
+    document.getElementById('btnRenameFolder').onclick = () => {
+      const newName = document.getElementById('editFolderNameInput').value.trim();
+      if(!newName) return alert('이름을 입력해주세요.');
+      if(newName !== folders[managingFolderIndex] && folders.includes(newName)) return alert('이미 존재하는 폴더 이름입니다.');
+      
+      const oldName = folders[managingFolderIndex];
+      folders[managingFolderIndex] = newName;
+      studyData.forEach(item => { if(item.folder === oldName) item.folder = newName; });
+      saveToLocal();
+      closeModals();
+    };
+
+    document.getElementById('btnDeleteFolderPrep').onclick = () => {
+      if(folders.length === 1) return alert('최소 1개의 폴더는 남아있어야 합니다.');
+      document.getElementById('folderManageModal').style.display = 'none';
+      document.getElementById('folderDeleteModal').style.display = 'block';
+    };
+
+    document.getElementById('btnMoveToDefault').onclick = () => {
+      const oldName = folders[managingFolderIndex];
+      if(!folders.includes('기본 노트')) folders.push('기본 노트');
+      studyData.forEach(item => { if(item.folder === oldName) item.folder = '기본 노트'; });
+      folders = folders.filter(f => f !== oldName);
+      currentFolderIndex = folders.indexOf('기본 노트') !== -1 ? folders.indexOf('기본 노트') : 0;
+      saveToLocal();
+      closeModals();
+    };
+
+    document.getElementById('btnDeleteAllInside').onclick = () => {
+      const oldName = folders[managingFolderIndex];
+      studyData = studyData.filter(item => item.folder !== oldName);
+      folders = folders.filter(f => f !== oldName);
+      currentFolderIndex = Math.max(0, currentFolderIndex - 1);
+      saveToLocal();
+      closeModals();
+    };
+
+    function switchFolder(newIndex) {
+      if (newIndex === currentFolderIndex) return;
+      const direction = newIndex > currentFolderIndex ? 'left' : 'right';
+      app.style.transform = direction === 'left' ? 'translateX(-50px)' : 'translateX(50px)';
+      app.style.opacity = '0';
+      setTimeout(() => {
+        currentFolderIndex = newIndex;
+        renderFolders();
+        renderList();
+        app.style.transition = 'none';
+        app.style.transform = direction === 'left' ? 'translateX(50px)' : 'translateX(-50px)';
+        app.offsetHeight; 
+        app.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
+        app.style.transform = 'translateX(0)';
+        app.style.opacity = '1';
+      }, 250);
+    }
 
     function renderList() {
       app.innerHTML = '';
       const now = Date.now(); 
       let hiddenCount = 0;
+      const currentFolderName = folders[currentFolderIndex];
+      let visibleItems = [];
 
-      studyData.forEach(item => {
-        if (item.hiddenUntil && item.hiddenUntil > now) {
-          hiddenCount++;
+      studyData.forEach((item, originalIndex) => {
+        if (item.folder === currentFolderName) {
+          if (item.hiddenUntil && item.hiddenUntil > now) hiddenCount++;
+          visibleItems.push({ item, originalIndex });
         }
       });
 
       if (hiddenCount > 0) {
-        statusText.innerHTML = `현재 숨김 처리된 항목이 <span style="color:#e74c3c;">${hiddenCount}개</span> 있습니다.`;
+        statusText.innerHTML = `현재 폴더에 숨김 처리된 항목이 <span style="color:#e74c3c;">${hiddenCount}개</span> 있습니다.`;
       } else {
-        statusText.innerHTML = `현재 숨김 처리된 항목이 없습니다.`;
+        statusText.innerHTML = `현재 폴더에 숨김 처리된 항목이 없습니다.`;
       }
 
-      studyData.forEach((item, index) => {
+      visibleItems.forEach((dataObj, i) => {
+        const { item, originalIndex } = dataObj;
         const isHidden = item.hiddenUntil && item.hiddenUntil > now;
-
-        if (isHidden && !isShowingHidden) {
-          return; 
-        }
+        if (isHidden && !isShowingHidden) return; 
 
         const accordion = document.createElement('div');
         accordion.className = 'accordion';
-        if (isHidden) {
-          accordion.classList.add('is-hidden-item'); 
-        }
+        if (isHidden) accordion.classList.add('is-hidden-item'); 
 
         let displayContent = item.content.replace(/\n/g, '<br>');
 
         let buttonsHtml = '';
-        if (index > 0) buttonsHtml += `<button class="btn btn-move btn-small" onclick="moveUp(${index})">⬆️ 위로</button>`;
-        if (index < studyData.length - 1) buttonsHtml += `<button class="btn btn-move btn-small" onclick="moveDown(${index})">⬇️ 아래로</button>`;
+        if (i > 0) buttonsHtml += `<button class="btn btn-move btn-small" onclick="swapItems(${originalIndex}, ${visibleItems[i-1].originalIndex})">⬆️ 위로</button>`;
+        if (i < visibleItems.length - 1) buttonsHtml += `<button class="btn btn-move btn-small" onclick="swapItems(${originalIndex}, ${visibleItems[i+1].originalIndex})">⬇️ 아래로</button>`;
         
-        buttonsHtml += `<button class="btn btn-edit btn-small" onclick="editItem(${index})">✏️ 수정</button>`;
+        buttonsHtml += `<button class="btn btn-edit btn-small" onclick="editItem(${originalIndex})">✏️ 수정</button>`;
         
         if (isHidden) {
-          buttonsHtml += `<button class="btn btn-unhide btn-small" onclick="unhideItem(${index})">👁️ 숨김 해제</button>`;
+          buttonsHtml += `<button class="btn btn-unhide btn-small" onclick="unhideItem(${originalIndex})">👁️ 숨김 해제</button>`;
         } else {
-          buttonsHtml += `<button class="btn btn-hide btn-small" onclick="hideItem(${index})">⏱️ 감추기</button>`;
+          buttonsHtml += `<button class="btn btn-hide btn-small" onclick="hideItem(${originalIndex})">⏱️ 감추기</button>`;
         }
-        buttonsHtml += `<button class="btn btn-delete btn-small" onclick="deleteItem(${index})">🗑️ 삭제</button>`;
 
         accordion.innerHTML = `
           <div class="accordion-header">
@@ -399,7 +567,32 @@
         const header = accordion.querySelector('.accordion-header');
         const content = accordion.querySelector('.accordion-content');
 
-        header.addEventListener('click', () => {
+        let pressTimer;
+        let isLongPress = false;
+
+        const startPress = () => {
+          isLongPress = false;
+          pressTimer = setTimeout(() => {
+            isLongPress = true;
+            openItemManageModal(originalIndex);
+          }, 500); 
+        };
+        const cancelPress = () => clearTimeout(pressTimer);
+
+        header.addEventListener('touchstart', startPress, {passive: true});
+        header.addEventListener('touchmove', cancelPress, {passive: true});
+        header.addEventListener('touchend', cancelPress);
+        
+        header.addEventListener('mousedown', startPress);
+        header.addEventListener('mousemove', cancelPress);
+        header.addEventListener('mouseup', cancelPress);
+        header.addEventListener('mouseleave', cancelPress);
+
+        header.addEventListener('click', (e) => {
+          if (isLongPress) {
+            e.preventDefault();
+            return;
+          }
           const isActive = accordion.classList.contains('active');
           if (!isActive) {
             accordion.classList.add('active');
@@ -412,217 +605,193 @@
       });
     }
 
-    function saveToLocal() {
-      localStorage.setItem('myStudyApp', JSON.stringify(studyData));
-      renderList();
+    function openItemManageModal(index) {
+      managingItemIndex = index;
+      const select = document.getElementById('folderSelect');
+      select.innerHTML = '';
+      folders.forEach(f => {
+        const opt = document.createElement('option');
+        opt.value = f;
+        opt.textContent = f;
+        if(f === studyData[index].folder) opt.selected = true;
+        select.appendChild(opt);
+      });
+      modalOverlay.style.display = 'block';
+      document.getElementById('itemManageModal').style.display = 'block';
     }
 
-    toggleHiddenBtn.addEventListener('click', () => {
-      isShowingHidden = !isShowingHidden;
-      if (isShowingHidden) {
-        toggleHiddenBtn.textContent = '닫기 (숨긴 항목)';
-        toggleHiddenBtn.style.backgroundColor = '#8e44ad';
-      } else {
-        toggleHiddenBtn.textContent = '👀 숨긴 항목 보기';
-        toggleHiddenBtn.style.backgroundColor = '#9b59b6';
-      }
-      renderList();
-    });
+    document.getElementById('btnMoveItem').onclick = () => {
+      const newFolder = document.getElementById('folderSelect').value;
+      studyData[managingItemIndex].folder = newFolder;
+      saveToLocal();
+      closeModals();
+    };
 
-    window.moveUp = function(index) {
-      if (index > 0) {
-        const temp = studyData[index];
-        studyData[index] = studyData[index - 1];
-        studyData[index - 1] = temp;
+    document.getElementById('btnDeleteItem').onclick = () => {
+      if(confirm('이 항목을 정말 영구 삭제할까요?')) {
+        studyData.splice(managingItemIndex, 1);
         saveToLocal();
+        closeModals();
       }
     };
 
-    window.moveDown = function(index) {
-      if (index < studyData.length - 1) {
-        const temp = studyData[index];
-        studyData[index] = studyData[index + 1];
-        studyData[index + 1] = temp;
-        saveToLocal();
+    // 🔥 스와이프 로직 수정: 상하 스크롤 시 좌우 넘어감 방지
+    let touchstartX = 0;
+    let touchstartY = 0;
+    let touchendX = 0;
+    let touchendY = 0;
+    const swipeContainer = document.getElementById('swipeContainer');
+    
+    swipeContainer.addEventListener('touchstart', e => { 
+      touchstartX = e.changedTouches[0].screenX; 
+      touchstartY = e.changedTouches[0].screenY; 
+    }, {passive: true});
+    
+    swipeContainer.addEventListener('touchend', e => {
+      touchendX = e.changedTouches[0].screenX;
+      touchendY = e.changedTouches[0].screenY;
+      
+      const diffX = Math.abs(touchendX - touchstartX);
+      const diffY = Math.abs(touchendY - touchstartY);
+      
+      // 가로 이동이 세로 이동보다 크고 60px 이상 밀었을 때만 넘어가게!
+      if (diffX > 60 && diffX > diffY) {
+        if (touchendX < touchstartX && currentFolderIndex < folders.length - 1) switchFolder(currentFolderIndex + 1);
+        if (touchendX > touchstartX && currentFolderIndex > 0) switchFolder(currentFolderIndex - 1);
       }
+    }, {passive: true});
+
+    document.getElementById('showAddBtn').addEventListener('click', () => {
+      closeFab();
+      document.getElementById('inputTitle').value = '';
+      document.getElementById('inputContent').value = '';
+      document.getElementById('modalTitle').textContent = '새 내용 추가';
+      document.getElementById('saveBtn').textContent = '저장';
+      modalOverlay.style.display = 'block';
+      document.getElementById('addForm').style.display = 'block';
+    });
+
+    document.getElementById('toggleHiddenBtn').addEventListener('click', () => {
+      closeFab();
+      isShowingHidden = !isShowingHidden;
+      document.getElementById('toggleHiddenBtn').innerHTML = isShowingHidden ? '🙈 닫기 (숨긴 항목)' : '👀 숨긴 항목 보기';
+      renderList();
+    });
+
+    document.getElementById('downloadBtn').addEventListener('click', () => {
+      closeFab();
+      const blob = new Blob([JSON.stringify({folders: folders, data: studyData}, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = "my_study_backup.json"; a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    document.getElementById('uploadBtn').addEventListener('click', () => {
+      closeFab();
+      document.getElementById('fileInput').click();
+    });
+
+    window.swapItems = function(indexA, indexB) {
+      const temp = studyData[indexA];
+      studyData[indexA] = studyData[indexB];
+      studyData[indexB] = temp;
+      saveToLocal();
     };
 
     window.editItem = function(index) {
       editingIndex = index;
-      inputTitle.value = studyData[index].title;
-      inputContent.value = studyData[index].content;
-      
-      modalTitle.textContent = '내용 수정하기';
-      saveBtn.textContent = '수정 완료'; 
-      
+      document.getElementById('inputTitle').value = studyData[index].title;
+      document.getElementById('inputContent').value = studyData[index].content;
+      document.getElementById('modalTitle').textContent = '내용 수정하기';
+      document.getElementById('saveBtn').textContent = '수정 완료'; 
       modalOverlay.style.display = 'block';
-      addForm.style.display = 'block';
+      document.getElementById('addForm').style.display = 'block';
     };
 
     window.hideItem = function(index) {
       if(confirm('이 내용을 3일 동안 숨기시겠습니까?')) {
-        const threeDaysInMs = 3 * 24 * 60 * 60 * 1000; 
-        studyData[index].hiddenUntil = Date.now() + threeDaysInMs;
+        studyData[index].hiddenUntil = Date.now() + (3 * 24 * 60 * 60 * 1000);
         saveToLocal();
       }
     };
 
-    window.unhideItem = function(index) {
-      studyData[index].hiddenUntil = null;
-      saveToLocal();
-    };
-
-    window.deleteItem = function(index) {
-      if(confirm('정말 삭제하시겠습니까?')) {
-        studyData.splice(index, 1);
-        saveToLocal();
-      }
-    };
-
-    function closeForm() {
-      modalOverlay.style.display = 'none';
-      addForm.style.display = 'none';
-      inputTitle.value = '';
-      inputContent.value = '';
-      editingIndex = -1;
-    }
-
-    document.getElementById('showAddBtn').addEventListener('click', () => {
-      closeForm(); 
-      modalTitle.textContent = '새 내용 추가';
-      saveBtn.textContent = '저장';
-      
-      modalOverlay.style.display = 'block';
-      addForm.style.display = 'block';
-    });
-
-    document.getElementById('cancelBtn').addEventListener('click', closeForm);
-    modalOverlay.addEventListener('click', closeForm);
+    window.unhideItem = function(index) { studyData[index].hiddenUntil = null; saveToLocal(); };
 
     document.getElementById('boldBtn').addEventListener('click', () => {
-      const start = inputContent.selectionStart;
-      const end = inputContent.selectionEnd;
-      const text = inputContent.value;
-      const selectedText = text.substring(start, end);
-      const wrappedText = `<b>${selectedText}</b>`;
-      
-      inputContent.value = text.substring(0, start) + wrappedText + text.substring(end);
-      inputContent.focus();
-      
-      if (start === end) {
-        inputContent.selectionStart = start + 3;
-        inputContent.selectionEnd = start + 3;
-      } else {
-        inputContent.selectionStart = start;
-        inputContent.selectionEnd = start + wrappedText.length;
-      }
+      const el = document.getElementById('inputContent');
+      const s = el.selectionStart, e = el.selectionEnd, t = el.value;
+      const wrap = `<b>${t.substring(s, e)}</b>`;
+      el.value = t.substring(0, s) + wrap + t.substring(e);
+      el.focus();
+      el.selectionStart = s === e ? s + 3 : s;
+      el.selectionEnd = s === e ? s + 3 : s + wrap.length;
     });
 
     document.getElementById('highlightBtn').addEventListener('click', () => {
-      const start = inputContent.selectionStart;
-      const end = inputContent.selectionEnd;
-      const text = inputContent.value;
-      const selectedText = text.substring(start, end);
-      const wrappedText = `<mark>${selectedText}</mark>`;
-      
-      inputContent.value = text.substring(0, start) + wrappedText + text.substring(end);
-      inputContent.focus();
-      
-      if (start === end) {
-        inputContent.selectionStart = start + 6; 
-        inputContent.selectionEnd = start + 6;
-      } else {
-        inputContent.selectionStart = start;
-        inputContent.selectionEnd = start + wrappedText.length;
-      }
+      const el = document.getElementById('inputContent');
+      const s = el.selectionStart, e = el.selectionEnd, t = el.value;
+      const wrap = `<mark>${t.substring(s, e)}</mark>`;
+      el.value = t.substring(0, s) + wrap + t.substring(e);
+      el.focus();
+      el.selectionStart = s === e ? s + 6 : s;
+      el.selectionEnd = s === e ? s + 6 : s + wrap.length;
     });
 
     document.getElementById('bulletBtn').addEventListener('click', () => {
-      const pos = inputContent.selectionStart;
-      const text = inputContent.value;
-      
-      const lastNewline = text.lastIndexOf('\n', pos - 1);
-      const lineStart = lastNewline === -1 ? 0 : lastNewline + 1;
-      
-      const insertText = "&nbsp; • ";
-      
-      inputContent.value = text.substring(0, lineStart) + insertText + text.substring(lineStart);
-      
-      inputContent.focus();
-      inputContent.selectionStart = pos + insertText.length;
-      inputContent.selectionEnd = pos + insertText.length;
+      const el = document.getElementById('inputContent');
+      const pos = el.selectionStart, t = el.value;
+      const lineStart = t.lastIndexOf('\n', pos - 1) === -1 ? 0 : t.lastIndexOf('\n', pos - 1) + 1;
+      el.value = t.substring(0, lineStart) + "&nbsp; • " + t.substring(lineStart);
+      el.focus();
+      el.selectionStart = el.selectionEnd = pos + 8;
     });
 
     document.getElementById('insertTableBtn').addEventListener('click', () => {
-      const tableTemplate = `\n<div class="table-container">\n  <table>\n    <tr>\n      <th>구분</th>\n      <th>제목1</th>\n      <th>제목2</th>\n    </tr>\n    <tr>\n      <td>항목1</td>\n      <td>내용1</td>\n      <td>내용2</td>\n    </tr>\n  </table>\n</div>\n`;
-      const start = inputContent.selectionStart;
-      const text = inputContent.value;
-      inputContent.value = text.substring(0, start) + tableTemplate + text.substring(start);
-      inputContent.focus();
-      inputContent.selectionStart = start + tableTemplate.length;
-      inputContent.selectionEnd = start + tableTemplate.length;
+      const el = document.getElementById('inputContent');
+      const tb = `\n<div class="table-container">\n  <table>\n    <tr>\n      <th>구분</th>\n      <th>제목1</th>\n      <th>제목2</th>\n    </tr>\n    <tr>\n      <td>항목1</td>\n      <td>내용1</td>\n      <td>내용2</td>\n    </tr>\n  </table>\n</div>\n`;
+      const s = el.selectionStart, t = el.value;
+      el.value = t.substring(0, s) + tb + t.substring(s);
+      el.focus();
+      el.selectionStart = el.selectionEnd = s + tb.length;
     });
 
     document.getElementById('saveBtn').addEventListener('click', () => {
-      if (!inputTitle.value || !inputContent.value) {
-        alert('제목과 내용을 모두 입력해주세요!');
-        return;
-      }
+      const t = document.getElementById('inputTitle').value;
+      const c = document.getElementById('inputContent').value;
+      if (!t || !c) return alert('제목과 내용을 모두 입력해주세요!');
       
       if (editingIndex > -1) {
-        studyData[editingIndex].title = inputTitle.value;
-        studyData[editingIndex].content = inputContent.value;
+        studyData[editingIndex].title = t;
+        studyData[editingIndex].content = c;
       } else {
-        studyData.unshift({ 
-          title: inputTitle.value, 
-          content: inputContent.value,
-          hiddenUntil: null
-        });
+        studyData.unshift({ folder: folders[currentFolderIndex], title: t, content: c, hiddenUntil: null });
       }
-      
       saveToLocal();
-      closeForm();
+      closeModals();
     });
 
-    document.getElementById('downloadBtn').addEventListener('click', () => {
-      const dataStr = JSON.stringify(studyData, null, 2);
-      const blob = new Blob([dataStr], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = "my_study_backup.json";
-      a.click();
-      URL.revokeObjectURL(url);
-    });
-
-    const fileInput = document.getElementById('fileInput');
-    document.getElementById('uploadBtn').addEventListener('click', () => {
-      fileInput.click();
-    });
-
-    fileInput.addEventListener('change', (event) => {
+    document.getElementById('fileInput').addEventListener('change', (event) => {
       const file = event.target.files[0];
       if (!file) return;
-
       const reader = new FileReader();
       reader.onload = function(e) {
         try {
-          const uploadedData = JSON.parse(e.target.result);
-          if (Array.isArray(uploadedData)) {
-            studyData = uploadedData;
-            saveToLocal();
-            alert('백업 데이터를 성공적으로 불러왔습니다!');
-          } else {
-            alert('잘못된 백업 파일 형식입니다.');
-          }
-        } catch (error) {
-          alert('파일을 읽는 중 오류가 발생했습니다.');
-        }
+          const up = JSON.parse(e.target.result);
+          if (Array.isArray(up)) {
+            studyData = up; folders = ["기본 노트"];
+            studyData.forEach(item => { if(!item.folder) item.folder = "기본 노트"; });
+          } else if (up.folders && up.data) {
+            folders = up.folders; studyData = up.data;
+          } else throw new Error();
+          currentFolderIndex = 0; saveToLocal(); alert('백업 데이터를 불러왔습니다!');
+        } catch { alert('잘못된 백업 파일입니다.'); }
       };
       reader.readAsText(file);
-      fileInput.value = '';
+      document.getElementById('fileInput').value = '';
     });
 
+    renderFolders();
     renderList();
   </script>
 
