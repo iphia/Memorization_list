@@ -6,9 +6,9 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="나만의학습장">
-  <link rel="apple-touch-icon" href="icon.png">
+  <link rel="apple-touch-icon" href="https://placehold.co/180x180/4A90E2/FFFFFF/png?text=Study">
   
-  <title>나만의 심화 학습장 (스크롤+메뉴순서 완벽적용)</title>
+  <title>나만의 심화 학습장 (아코디언 토글 추가)</title>
   <style>
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -95,7 +95,6 @@
     #app {
       width: 100%;
       min-height: calc(100% + 1px); 
-      /* 🔥 스크롤 헛스윙(상단 가려짐) 방지 마법 코드 확실히 적용됨! */
       box-sizing: border-box; 
       transition: transform 0.3s ease, opacity 0.3s ease;
       padding-bottom: 80px; 
@@ -310,6 +309,7 @@
     <div class="fab-menu" id="fabMenu">
       <button class="fab-item" id="uploadBtn">📤 백업 불러오기</button>
       <button class="fab-item" id="downloadBtn">📥 백업 다운로드</button>
+      <button class="fab-item" id="toggleAutoCloseBtn">🗂️ 하나만 열기: OFF</button>
       <button class="fab-item" id="toggleHiddenBtn">👀 숨긴 항목 보기</button>
       <button class="fab-item" id="showAddBtn">✍️ 새 내용 추가</button>
     </div>
@@ -382,6 +382,12 @@
       },
       {
         folder: "기본 노트",
+        title: "🗂️ 하나만 열기 (아코디언 모드)",
+        content: "플로팅 메뉴에서 <b>[🗂️ 하나만 열기]</b>를 ON으로 설정하면, 새로운 내용을 열 때 열려있던 다른 내용이 자동으로 닫힙니다.<br>화면을 더 깔끔하게 관리하고 싶을 때 켜보세요!",
+        hiddenUntil: null
+      },
+      {
+        folder: "기본 노트",
         title: "🍎 쫀득한 바운스 & 헛스윙 스크롤 해결!",
         content: "내용이 적어도 화면을 위아래로 당겨보세요!<br>아이폰 특유의 쫀득하게 튕기는 바운스 스크롤 효과는 살아있으면서, 내용이 위로 쑥 숨어버리는 현상은 완벽하게 잡았습니다.",
         hiddenUntil: null
@@ -390,12 +396,6 @@
         folder: "기본 노트",
         title: "🔲 전체화면 편집 모드",
         content: "내용이 길어질 땐 수정 창 우측 상단의 <b>[🔲 넓게]</b> 버튼을 눌러봐요!<br>화면이 확 커지면서 편하게 글을 쓸 수 있는 전체화면 모드로 변신합니다.",
-        hiddenUntil: null
-      },
-      {
-        folder: "기본 노트",
-        title: "⚙️ 플로팅 버튼(FAB) 메뉴",
-        content: "우측 하단의 파란색 <b>[+]</b> 버튼을 누르면 <b>새 내용 추가, 숨긴 항목 보기, 백업 기능</b>이 짜잔! 하고 나타납니다. 화면이 한결 깔끔해졌죠?",
         hiddenUntil: null
       },
       {
@@ -414,6 +414,9 @@
 
     let folders = JSON.parse(localStorage.getItem('myStudyFolders')) || ["기본 노트"];
     let studyData = JSON.parse(localStorage.getItem('myStudyApp'));
+    
+    // 🔥 하나만 열기 기능 상태 (로컬 스토리지 연동)
+    let autoClose = JSON.parse(localStorage.getItem('myStudyAutoClose')) || false;
     
     if (!studyData || studyData.length === 0) {
       studyData = defaultData;
@@ -436,6 +439,10 @@
     const fabMain = document.getElementById('fabMain');
     const fabMenu = document.getElementById('fabMenu');
     const expandBtn = document.getElementById('expandBtn');
+    const toggleAutoCloseBtn = document.getElementById('toggleAutoCloseBtn');
+
+    // 앱 시작 시 토글 버튼 이름 셋팅
+    updateAutoCloseBtn();
 
     fabMain.addEventListener('click', () => {
       fabMain.classList.toggle('active');
@@ -705,12 +712,26 @@
         header.addEventListener('mouseup', cancelPress);
         header.addEventListener('mouseleave', cancelPress);
 
+        // 🔥 아코디언 열고 닫는 로직 (하나만 열기 기능 추가)
         header.addEventListener('click', (e) => {
           if (isLongPress) {
             e.preventDefault();
             return;
           }
           const isActive = accordion.classList.contains('active');
+          
+          // 하나만 열기 옵션이 켜져있고, 지금 누른 걸 새로 열려고 할 때
+          if (!isActive && autoClose) {
+            // 다른 모든 아코디언을 찾아서 닫아줌
+            const allAccordions = app.querySelectorAll('.accordion');
+            allAccordions.forEach(acc => {
+              if (acc !== accordion && acc.classList.contains('active')) {
+                acc.classList.remove('active');
+                acc.querySelector('.accordion-content').style.maxHeight = null;
+              }
+            });
+          }
+
           if (!isActive) {
             accordion.classList.add('active');
             content.style.maxHeight = content.scrollHeight + 100 + "px"; 
@@ -775,6 +796,29 @@
         if (touchendX > touchstartX && currentFolderIndex > 0) switchFolder(currentFolderIndex - 1);
       }
     }, {passive: true});
+
+    // 🔥 토글 버튼 UI 갱신 함수
+    function updateAutoCloseBtn() {
+      toggleAutoCloseBtn.textContent = autoClose ? '🗂️ 하나만 열기: ON' : '🗂️ 하나만 열기: OFF';
+      if (autoClose) {
+        toggleAutoCloseBtn.style.color = '#4A90E2'; // 켜져있으면 파란색 글씨로 강조
+      } else {
+        toggleAutoCloseBtn.style.color = '#333';
+      }
+    }
+
+    // 🔥 하나만 열기 토글 이벤트 연결
+    toggleAutoCloseBtn.addEventListener('click', () => {
+      closeFab();
+      autoClose = !autoClose;
+      localStorage.setItem('myStudyAutoClose', JSON.stringify(autoClose));
+      updateAutoCloseBtn();
+      
+      // 켜는 순간 여러 개 열려있을 수 있으니 화면 리셋
+      if (autoClose) {
+        renderList();
+      }
+    });
 
     document.getElementById('showAddBtn').addEventListener('click', () => {
       closeFab();
