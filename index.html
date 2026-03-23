@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-title" content="나만의학습장">
   <link rel="apple-touch-icon" href="icon.png">
   
-  <title>나만의 심화 학습장 (바운스 스크롤 적용)</title>
+  <title>나만의 심화 학습장 (폴더 순서 이동 기능)</title>
   <style>
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -23,7 +23,7 @@
       height: 100vh; 
       box-sizing: border-box;
       overflow: hidden; 
-      overscroll-behavior: none; /* 🔥 전체 화면 바운스는 막고 아래 리스트만 바운스 되게! */
+      overscroll-behavior: none; 
     }
     h1 {
       text-align: center;
@@ -93,7 +93,6 @@
     }
     #app {
       width: 100%;
-      /* 🔥 여기서 1px의 마법! 내용이 적어도 무조건 스크롤 영역을 활성화시켜서 아이폰 바운스 효과를 냄 */
       min-height: calc(100% + 1px); 
       transition: transform 0.3s ease, opacity 0.3s ease;
       padding-bottom: 80px; 
@@ -210,6 +209,16 @@
     .bg-red { background-color: #e74c3c; }
     .bg-gray { background-color: #95a5a6; }
 
+    /* 🔥 폴더 이동 버튼들을 나란히 배치하기 위한 스타일 */
+    .flex-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .flex-row .btn-full {
+      margin-bottom: 0;
+    }
+
     input[type="text"], textarea, select {
       width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ddd;
       border-radius: 6px; box-sizing: border-box; font-size: 16px; font-family: inherit;
@@ -297,6 +306,12 @@
     <h3 class="modal-title">폴더 관리</h3>
     <input type="text" id="editFolderNameInput" placeholder="새 폴더 이름">
     <button class="btn-full bg-blue" id="btnRenameFolder">이름 변경하기</button>
+    
+    <div class="flex-row">
+      <button class="btn-full bg-gray" id="btnMoveFolderLeft">⬅️ 왼쪽으로</button>
+      <button class="btn-full bg-gray" id="btnMoveFolderRight">오른쪽으로 ➡️</button>
+    </div>
+
     <button class="btn-full bg-red" id="btnDeleteFolderPrep">폴더 삭제하기</button>
     <button class="btn-full bg-gray" onclick="closeModals()">닫기</button>
   </div>
@@ -329,14 +344,8 @@
       },
       {
         folder: "기본 노트",
-        title: "🍎 쫀득한 바운스 스크롤",
-        content: "내용이 적어도 화면을 위아래로 당겨보세요!<br>아이폰 특유의 쫀득하게 튕기는 바운스 스크롤 효과가 적용되어 진짜 앱처럼 느껴질 거예요.",
-        hiddenUntil: null
-      },
-      {
-        folder: "기본 노트",
         title: "📂 폴더 기능 완전 정복",
-        content: "• <b>폴더 이동</b>: 위쪽 탭을 누르거나, 화면 빈 곳 <b>어디든 좌우로 스와이프</b>해봐!<br>• <b>폴더 관리</b>: 파랗게 켜진 현재 폴더 탭을 <b>한 번 더 터치</b>하면 폴더 이름을 바꾸거나 지울 수 있어.",
+        content: "• <b>폴더 이동</b>: 위쪽 탭을 누르거나, 화면 빈 곳 <b>어디든 좌우로 스와이프</b>해봐!<br>• <b>폴더 관리</b>: 파랗게 켜진 현재 폴더 탭을 <b>한 번 더 터치</b>하면 폴더 이름을 바꾸거나 지울 수 있어.<br>• <b>폴더 순서 변경</b>: 폴더 관리 창에서 <b>[⬅️ 왼쪽으로]</b>, <b>[오른쪽으로 ➡️]</b> 버튼을 누르면 폴더 탭 순서도 마음대로 바꿀 수 있지!",
         hiddenUntil: null
       },
       {
@@ -451,6 +460,40 @@
       };
       folderTabs.appendChild(addBtn);
     }
+
+    // 🔥 폴더 순서 이동 (왼쪽)
+    document.getElementById('btnMoveFolderLeft').onclick = () => {
+      if (managingFolderIndex > 0) {
+        const temp = folders[managingFolderIndex];
+        folders[managingFolderIndex] = folders[managingFolderIndex - 1];
+        folders[managingFolderIndex - 1] = temp;
+        
+        if (currentFolderIndex === managingFolderIndex) {
+          currentFolderIndex = managingFolderIndex - 1;
+        } else if (currentFolderIndex === managingFolderIndex - 1) {
+          currentFolderIndex = managingFolderIndex;
+        }
+        managingFolderIndex--;
+        saveToLocal();
+      }
+    };
+
+    // 🔥 폴더 순서 이동 (오른쪽)
+    document.getElementById('btnMoveFolderRight').onclick = () => {
+      if (managingFolderIndex < folders.length - 1) {
+        const temp = folders[managingFolderIndex];
+        folders[managingFolderIndex] = folders[managingFolderIndex + 1];
+        folders[managingFolderIndex + 1] = temp;
+        
+        if (currentFolderIndex === managingFolderIndex) {
+          currentFolderIndex = managingFolderIndex + 1;
+        } else if (currentFolderIndex === managingFolderIndex + 1) {
+          currentFolderIndex = managingFolderIndex;
+        }
+        managingFolderIndex++;
+        saveToLocal();
+      }
+    };
 
     document.getElementById('btnRenameFolder').onclick = () => {
       const newName = document.getElementById('editFolderNameInput').value.trim();
