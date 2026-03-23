@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-title" content="나만의학습장">
   <link rel="apple-touch-icon" href="icon.png">
   
-  <title>나만의 심화 학습장 (폴더 순서 이동 기능)</title>
+  <title>나만의 심화 학습장 (폴더 삭제 로직 완벽 개선)</title>
   <style>
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -209,7 +209,6 @@
     .bg-red { background-color: #e74c3c; }
     .bg-gray { background-color: #95a5a6; }
 
-    /* 🔥 폴더 이동 버튼들을 나란히 배치하기 위한 스타일 */
     .flex-row {
       display: flex;
       gap: 10px;
@@ -319,7 +318,7 @@
   <div id="folderDeleteModal" class="modal-box">
     <h3 class="modal-title">폴더 삭제</h3>
     <p style="font-size:14px; text-align:center; color:#555; line-height:1.5;">이 폴더 안에 있는 내용은<br>어떻게 할까요?</p>
-    <button class="btn-full bg-blue" id="btnMoveToDefault">기본 노트로 모두 이동</button>
+    <button class="btn-full bg-blue" id="btnMoveToDefault">다른 폴더로 모두 이동</button>
     <button class="btn-full bg-red" id="btnDeleteAllInside">내용까지 통째로 삭제</button>
     <button class="btn-full bg-gray" onclick="closeModals()">취소</button>
   </div>
@@ -340,6 +339,12 @@
         folder: "기본 노트",
         title: "🎉 나만의 학습 앱 완벽 가이드!",
         content: "우리가 함께 만든 숨겨진 기능들을 정리해 줄게.<br><br>아래 설명들을 읽어보면 앱을 200% 활용할 수 있어!",
+        hiddenUntil: null
+      },
+      {
+        folder: "기본 노트",
+        title: "⚙️ 플로팅 버튼(FAB) 메뉴",
+        content: "우측 하단의 파란색 <b>[+]</b> 버튼을 누르면 <b>새 내용 추가, 숨긴 항목 보기, 백업 기능</b>이 짜잔! 하고 나타납니다. 화면이 한결 깔끔해졌죠?",
         hiddenUntil: null
       },
       {
@@ -461,7 +466,6 @@
       folderTabs.appendChild(addBtn);
     }
 
-    // 🔥 폴더 순서 이동 (왼쪽)
     document.getElementById('btnMoveFolderLeft').onclick = () => {
       if (managingFolderIndex > 0) {
         const temp = folders[managingFolderIndex];
@@ -478,7 +482,6 @@
       }
     };
 
-    // 🔥 폴더 순서 이동 (오른쪽)
     document.getElementById('btnMoveFolderRight').onclick = () => {
       if (managingFolderIndex < folders.length - 1) {
         const temp = folders[managingFolderIndex];
@@ -507,18 +510,32 @@
       closeModals();
     };
 
+    // 🔥 똑똑해진 폴더 삭제 확인 창!
     document.getElementById('btnDeleteFolderPrep').onclick = () => {
       if(folders.length === 1) return alert('최소 1개의 폴더는 남아있어야 합니다.');
+      
+      // 삭제하려는 폴더를 제외하고, 내용이 이사갈 '남아있는 다른 폴더' 찾기
+      const oldName = folders[managingFolderIndex];
+      const targetFolder = folders.find(f => f !== oldName);
+      
+      // 버튼 이름에 이사갈 폴더 이름을 친절하게 적어줌!
+      document.getElementById('btnMoveToDefault').textContent = `'${targetFolder}'(으)로 모두 이동`;
+      
       document.getElementById('folderManageModal').style.display = 'none';
       document.getElementById('folderDeleteModal').style.display = 'block';
     };
 
+    // 🔥 내용을 다른 폴더로 옮기고 폴더 지우기
     document.getElementById('btnMoveToDefault').onclick = () => {
       const oldName = folders[managingFolderIndex];
-      if(!folders.includes('기본 노트')) folders.push('기본 노트');
-      studyData.forEach(item => { if(item.folder === oldName) item.folder = '기본 노트'; });
+      const targetFolder = folders.find(f => f !== oldName); // 위에서 찾은 그 폴더!
+      
+      // 내용 이동
+      studyData.forEach(item => { if(item.folder === oldName) item.folder = targetFolder; });
+      
+      // 폴더 날리기
       folders = folders.filter(f => f !== oldName);
-      currentFolderIndex = folders.indexOf('기본 노트') !== -1 ? folders.indexOf('기본 노트') : 0;
+      currentFolderIndex = folders.indexOf(targetFolder);
       saveToLocal();
       closeModals();
     };
