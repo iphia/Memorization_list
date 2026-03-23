@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-title" content="나만의학습장">
   <link rel="apple-touch-icon" href="icon.png">
   
-  <title>나만의 심화 학습장 (폴더 삭제 로직 완벽 개선)</title>
+  <title>나만의 심화 학습장 (줄바꿈 버튼 추가)</title>
   <style>
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -181,6 +181,7 @@
       z-index: 998;
       backdrop-filter: blur(2px); 
     }
+    
     .modal-box {
       display: none;
       position: fixed;
@@ -194,13 +195,43 @@
       box-shadow: 0 10px 30px rgba(0,0,0,0.2);
       z-index: 999;
       box-sizing: border-box;
+      flex-direction: column; 
+    }
+
+    .modal-box.fullscreen {
+      width: 100%;
+      height: 100%;
+      max-width: none;
+      top: 0;
+      left: 0;
+      transform: none;
+      border-radius: 0;
+      padding-top: env(safe-area-inset-top, 20px);
+      padding-bottom: env(safe-area-inset-bottom, 20px);
+    }
+    .modal-box.fullscreen #inputContent {
+      flex-grow: 1;
+    }
+
+    .modal-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
     }
     .modal-title {
       font-size: 18px;
       font-weight: bold;
-      margin-bottom: 15px;
-      margin-top: 0;
-      text-align: center;
+      margin: 0;
+    }
+    .btn-expand {
+      background: none;
+      border: none;
+      font-size: 14px;
+      color: #4A90E2;
+      font-weight: bold;
+      cursor: pointer;
+      padding: 5px;
     }
 
     .btn-full { width: 100%; padding: 12px; margin-bottom: 10px; border-radius: 8px; border: none; font-size: 14px; font-weight: bold; cursor: pointer; color: white; }
@@ -286,12 +317,17 @@
   <div id="modalOverlay"></div>
 
   <div id="addForm" class="modal-box">
-    <h3 class="modal-title" id="modalTitle">새 내용 추가</h3>
+    <div class="modal-header-row">
+      <h3 class="modal-title" id="modalTitle">새 내용 추가</h3>
+      <button class="btn-expand" id="expandBtn">🔲 넓게</button>
+    </div>
+    
     <input type="text" id="inputTitle" placeholder="제목을 입력하세요">
     <div class="form-toolbar">
       <button class="btn-tool" id="boldBtn"><b>B</b> 굵게</button>
       <button class="btn-tool" id="highlightBtn" style="background-color:#f1c40f; color:black; font-weight:bold;">🖍️ 형광펜</button>
       <button class="btn-tool" id="bulletBtn">• 들여쓰기</button>
+      <button class="btn-tool" id="brBtn">↵ 줄바꿈</button>
       <button class="btn-tool" id="insertTableBtn">📝 표 넣기</button>
     </div>
     <textarea id="inputContent" placeholder="내용을 입력하세요."></textarea>
@@ -318,7 +354,7 @@
   <div id="folderDeleteModal" class="modal-box">
     <h3 class="modal-title">폴더 삭제</h3>
     <p style="font-size:14px; text-align:center; color:#555; line-height:1.5;">이 폴더 안에 있는 내용은<br>어떻게 할까요?</p>
-    <button class="btn-full bg-blue" id="btnMoveToDefault">다른 폴더로 모두 이동</button>
+    <button class="btn-full bg-blue" id="btnMoveToDefault">기본 노트로 모두 이동</button>
     <button class="btn-full bg-red" id="btnDeleteAllInside">내용까지 통째로 삭제</button>
     <button class="btn-full bg-gray" onclick="closeModals()">취소</button>
   </div>
@@ -343,6 +379,18 @@
       },
       {
         folder: "기본 노트",
+        title: "📝 표 여백 버그 수정 & 줄바꿈 버튼!",
+        content: "표 안에 내용을 넣을 때 줄을 바꾸고 싶다면 <b>[↵ 줄바꿈]</b> 버튼을 콕 눌러주세요.<br>이제 아무리 복잡한 표를 만들어도 위쪽에 불필요한 여백이 생기지 않아요!",
+        hiddenUntil: null
+      },
+      {
+        folder: "기본 노트",
+        title: "🔲 전체화면 편집 모드",
+        content: "내용이 길어질 땐 수정 창 우측 상단의 <b>[🔲 넓게]</b> 버튼을 눌러봐요!<br>화면이 확 커지면서 편하게 글을 쓸 수 있는 전체화면 모드로 변신합니다.",
+        hiddenUntil: null
+      },
+      {
+        folder: "기본 노트",
         title: "⚙️ 플로팅 버튼(FAB) 메뉴",
         content: "우측 하단의 파란색 <b>[+]</b> 버튼을 누르면 <b>새 내용 추가, 숨긴 항목 보기, 백업 기능</b>이 짜잔! 하고 나타납니다. 화면이 한결 깔끔해졌죠?",
         hiddenUntil: null
@@ -357,12 +405,6 @@
         folder: "기본 노트",
         title: "👆 항목 꾹~ 누르기 (롱프레스)",
         content: "외울 항목(제목)을 <b>0.5초 동안 꾹~ 누르고 있어봐!</b><br><br>그러면 내용 안으로 들어가지 않고도 항목을 <b>다른 폴더로 이동</b>시키거나 <b>완전히 삭제</b>할 수 있는 깔끔한 관리 창이 나타나.",
-        hiddenUntil: null
-      },
-      {
-        folder: "기본 노트",
-        title: "📝 글쓰기 도구 & 3일 감추기",
-        content: "• 수정 창에서 드래그 후 <b>굵게, 형광펜</b>을 칠할 수 있고 <b>들여쓰기, 표 넣기</b>도 원터치야.<br>• 다 외운 건 <b>[⏱️ 감추기]</b>를 누르면 목록에서 사라졌다가 3일 뒤에 복습하라고 짠! 나타나.",
         hiddenUntil: null
       }
     ];
@@ -390,6 +432,7 @@
 
     const fabMain = document.getElementById('fabMain');
     const fabMenu = document.getElementById('fabMenu');
+    const expandBtn = document.getElementById('expandBtn');
 
     fabMain.addEventListener('click', () => {
       fabMain.classList.toggle('active');
@@ -418,6 +461,10 @@
     window.closeModals = function() {
       modalOverlay.style.display = 'none';
       addForm.style.display = 'none';
+      
+      addForm.classList.remove('fullscreen');
+      expandBtn.innerHTML = '🔲 넓게';
+
       document.getElementById('folderManageModal').style.display = 'none';
       document.getElementById('folderDeleteModal').style.display = 'none';
       document.getElementById('itemManageModal').style.display = 'none';
@@ -428,6 +475,15 @@
     }
 
     modalOverlay.addEventListener('click', closeModals);
+
+    expandBtn.addEventListener('click', () => {
+      addForm.classList.toggle('fullscreen');
+      if (addForm.classList.contains('fullscreen')) {
+        expandBtn.innerHTML = '🗗 작게';
+      } else {
+        expandBtn.innerHTML = '🔲 넓게';
+      }
+    });
 
     function renderFolders() {
       folderTabs.innerHTML = '';
@@ -510,30 +566,24 @@
       closeModals();
     };
 
-    // 🔥 똑똑해진 폴더 삭제 확인 창!
     document.getElementById('btnDeleteFolderPrep').onclick = () => {
       if(folders.length === 1) return alert('최소 1개의 폴더는 남아있어야 합니다.');
       
-      // 삭제하려는 폴더를 제외하고, 내용이 이사갈 '남아있는 다른 폴더' 찾기
       const oldName = folders[managingFolderIndex];
       const targetFolder = folders.find(f => f !== oldName);
       
-      // 버튼 이름에 이사갈 폴더 이름을 친절하게 적어줌!
       document.getElementById('btnMoveToDefault').textContent = `'${targetFolder}'(으)로 모두 이동`;
       
       document.getElementById('folderManageModal').style.display = 'none';
       document.getElementById('folderDeleteModal').style.display = 'block';
     };
 
-    // 🔥 내용을 다른 폴더로 옮기고 폴더 지우기
     document.getElementById('btnMoveToDefault').onclick = () => {
       const oldName = folders[managingFolderIndex];
-      const targetFolder = folders.find(f => f !== oldName); // 위에서 찾은 그 폴더!
+      const targetFolder = folders.find(f => f !== oldName); 
       
-      // 내용 이동
       studyData.forEach(item => { if(item.folder === oldName) item.folder = targetFolder; });
       
-      // 폴더 날리기
       folders = folders.filter(f => f !== oldName);
       currentFolderIndex = folders.indexOf(targetFolder);
       saveToLocal();
@@ -596,7 +646,10 @@
         accordion.className = 'accordion';
         if (isHidden) accordion.classList.add('is-hidden-item'); 
 
-        let displayContent = item.content.replace(/\n/g, '<br>');
+        let displayContent = item.content;
+        
+        displayContent = displayContent.replace(/\s*(<\/?(?:table|tbody|thead|tr|th|td)[^>]*>)\s*/gi, '$1');
+        displayContent = displayContent.replace(/\n/g, '<br>');
 
         let buttonsHtml = '';
         if (i > 0) buttonsHtml += `<button class="btn btn-move btn-small" onclick="swapItems(${originalIndex}, ${visibleItems[i-1].originalIndex})">⬆️ 위로</button>`;
@@ -727,7 +780,7 @@
       document.getElementById('modalTitle').textContent = '새 내용 추가';
       document.getElementById('saveBtn').textContent = '저장';
       modalOverlay.style.display = 'block';
-      document.getElementById('addForm').style.display = 'block';
+      addForm.style.display = 'flex';
     });
 
     document.getElementById('toggleHiddenBtn').addEventListener('click', () => {
@@ -765,7 +818,7 @@
       document.getElementById('modalTitle').textContent = '내용 수정하기';
       document.getElementById('saveBtn').textContent = '수정 완료'; 
       modalOverlay.style.display = 'block';
-      document.getElementById('addForm').style.display = 'block';
+      addForm.style.display = 'flex';
     };
 
     window.hideItem = function(index) {
@@ -806,9 +859,19 @@
       el.selectionStart = el.selectionEnd = pos + 8;
     });
 
+    // 🔥 새롭게 추가된 줄바꿈 버튼 기능
+    document.getElementById('brBtn').addEventListener('click', () => {
+      const el = document.getElementById('inputContent');
+      const s = el.selectionStart, e = el.selectionEnd, t = el.value;
+      const insertText = "<br>\n"; // 보기 좋게 코드상 줄바꿈(\n)도 같이 넣어줌
+      el.value = t.substring(0, s) + insertText + t.substring(e);
+      el.focus();
+      el.selectionStart = el.selectionEnd = s + insertText.length;
+    });
+
     document.getElementById('insertTableBtn').addEventListener('click', () => {
       const el = document.getElementById('inputContent');
-      const tb = `\n<div class="table-container">\n  <table>\n    <tr>\n      <th>구분</th>\n      <th>제목1</th>\n      <th>제목2</th>\n    </tr>\n    <tr>\n      <td>항목1</td>\n      <td>내용1</td>\n      <td>내용2</td>\n    </tr>\n  </table>\n</div>\n`;
+      const tb = `\n<div class="table-container"><table><tr><th>구분</th><th>제목1</th><th>제목2</th></tr><tr><td>항목1</td><td>내용1</td><td>내용2</td></tr></table></div>\n`;
       const s = el.selectionStart, t = el.value;
       el.value = t.substring(0, s) + tb + t.substring(s);
       el.focus();
