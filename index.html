@@ -6,9 +6,9 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="나만의학습장">
-  <link rel="apple-touch-icon" href="https://placehold.co/180x180/4A90E2/FFFFFF/png?text=Study">
+  <link rel="apple-touch-icon" href="icon.png">
   
-  <title>나만의 심화 학습장 (아코디언 토글 추가)</title>
+  <title>나만의 심화 학습장</title>
   <style>
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -43,6 +43,7 @@
       -ms-overflow-style: none;
       scrollbar-width: none;
       flex-shrink: 0;
+      scroll-behavior: smooth; /* 🔥 탭 자체도 부드럽게 스크롤 되도록 설정 */
     }
     .folder-tabs::-webkit-scrollbar {
       display: none;
@@ -79,9 +80,9 @@
       text-align: center;
       font-size: 13px;
       color: #7f8c8d;
-      margin-bottom: 15px;
       font-weight: bold;
       flex-shrink: 0;
+      display: none; /* 🔥 기본적으로는 아예 안 보이게 숨김 처리! */
     }
 
     #swipeContainer {
@@ -377,7 +378,13 @@
       {
         folder: "기본 노트",
         title: "🎉 나만의 학습 앱 완벽 가이드!",
-        content: "우리가 함께 만든 숨겨진 기능들을 정리해 줄게.<br><br>아래 설명들을 읽어보면 앱을 200% 활용할 수 있어!",
+        content: "우리가 함께 만든 기능들을 확인해봐!",
+        hiddenUntil: null
+      },
+      {
+        folder: "기본 노트",
+        title: "🔄 완벽해진 무한 스와이프 & 자동 스크롤",
+        content: "• <b>무한 스와이프</b>: 마지막 폴더에서 쓱 넘기면 다시 첫 번째 폴더로 짠 하고 나타나요!<br>• <b>탭 자동 스크롤</b>: 폴더가 많아도 현재 보고 있는 폴더 탭이 가운데로 스르륵 따라옵니다.",
         hiddenUntil: null
       },
       {
@@ -388,26 +395,8 @@
       },
       {
         folder: "기본 노트",
-        title: "🍎 쫀득한 바운스 & 헛스윙 스크롤 해결!",
-        content: "내용이 적어도 화면을 위아래로 당겨보세요!<br>아이폰 특유의 쫀득하게 튕기는 바운스 스크롤 효과는 살아있으면서, 내용이 위로 쑥 숨어버리는 현상은 완벽하게 잡았습니다.",
-        hiddenUntil: null
-      },
-      {
-        folder: "기본 노트",
-        title: "🔲 전체화면 편집 모드",
-        content: "내용이 길어질 땐 수정 창 우측 상단의 <b>[🔲 넓게]</b> 버튼을 눌러봐요!<br>화면이 확 커지면서 편하게 글을 쓸 수 있는 전체화면 모드로 변신합니다.",
-        hiddenUntil: null
-      },
-      {
-        folder: "기본 노트",
         title: "📂 폴더 기능 완전 정복",
-        content: "• <b>폴더 이동</b>: 위쪽 탭을 누르거나, 화면 빈 곳 <b>어디든 좌우로 스와이프</b>해봐!<br>• <b>폴더 관리</b>: 파랗게 켜진 현재 폴더 탭을 <b>한 번 더 터치</b>하면 폴더 이름을 바꾸거나 지울 수 있어.<br>• <b>폴더 순서 변경</b>: 폴더 관리 창에서 <b>[⬅️ 왼쪽으로]</b>, <b>[오른쪽으로 ➡️]</b> 버튼을 누르면 폴더 탭 순서도 마음대로 바꿀 수 있지!",
-        hiddenUntil: null
-      },
-      {
-        folder: "기본 노트",
-        title: "👆 항목 꾹~ 누르기 (롱프레스)",
-        content: "외울 항목(제목)을 <b>0.5초 동안 꾹~ 누르고 있어봐!</b><br><br>그러면 내용 안으로 들어가지 않고도 항목을 <b>다른 폴더로 이동</b>시키거나 <b>완전히 삭제</b>할 수 있는 깔끔한 관리 창이 나타나.",
+        content: "• <b>마지막 폴더 기억</b>: 앱을 껐다 켜도 무조건 내가 마지막으로 보던 폴더부터 열려요.<br>• <b>폴더 관리</b>: 파랗게 켜진 현재 폴더 탭을 <b>한 번 더 터치</b>하면 폴더 이름을 바꾸거나 지울 수 있어.<br>• <b>폴더 순서 변경</b>: <b>[⬅️ 왼쪽으로]</b>, <b>[오른쪽으로 ➡️]</b> 버튼으로 폴더 위치도 마음대로 바꿔봐요!",
         hiddenUntil: null
       }
     ];
@@ -415,7 +404,11 @@
     let folders = JSON.parse(localStorage.getItem('myStudyFolders')) || ["기본 노트"];
     let studyData = JSON.parse(localStorage.getItem('myStudyApp'));
     
-    // 🔥 하나만 열기 기능 상태 (로컬 스토리지 연동)
+    // 🔥 마지막으로 보던 폴더 기억하기 불러오기
+    let savedFolder = localStorage.getItem('myStudyCurrentFolder');
+    let currentFolderIndex = folders.indexOf(savedFolder);
+    if (currentFolderIndex === -1) currentFolderIndex = 0; // 저장된 게 없거나 삭제됐다면 처음으로
+    
     let autoClose = JSON.parse(localStorage.getItem('myStudyAutoClose')) || false;
     
     if (!studyData || studyData.length === 0) {
@@ -424,7 +417,6 @@
       studyData.forEach(item => { if (!item.folder) item.folder = folders[0]; });
     }
 
-    let currentFolderIndex = 0;
     let editingIndex = -1;
     let managingFolderIndex = -1;
     let managingItemIndex = -1;
@@ -441,7 +433,6 @@
     const expandBtn = document.getElementById('expandBtn');
     const toggleAutoCloseBtn = document.getElementById('toggleAutoCloseBtn');
 
-    // 앱 시작 시 토글 버튼 이름 셋팅
     updateAutoCloseBtn();
 
     fabMain.addEventListener('click', () => {
@@ -464,6 +455,10 @@
     function saveToLocal() {
       localStorage.setItem('myStudyFolders', JSON.stringify(folders));
       localStorage.setItem('myStudyApp', JSON.stringify(studyData));
+      // 🔥 저장할 때마다 현재 폴더 위치 기록
+      if(folders[currentFolderIndex]) {
+         localStorage.setItem('myStudyCurrentFolder', folders[currentFolderIndex]);
+      }
       renderFolders();
       renderList();
     }
@@ -471,10 +466,8 @@
     window.closeModals = function() {
       modalOverlay.style.display = 'none';
       addForm.style.display = 'none';
-      
       addForm.classList.remove('fullscreen');
       expandBtn.innerHTML = '🔲 넓게';
-
       document.getElementById('folderManageModal').style.display = 'none';
       document.getElementById('folderDeleteModal').style.display = 'none';
       document.getElementById('itemManageModal').style.display = 'none';
@@ -530,6 +523,14 @@
         }
       };
       folderTabs.appendChild(addBtn);
+
+      // 🔥 [기능 4] 폴더 탭 자동 스크롤 기능! 화면 새로고침 후에 작동하도록 설정
+      requestAnimationFrame(() => {
+        const activeTab = folderTabs.querySelector('.active');
+        if (activeTab) {
+          activeTab.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+        }
+      });
     }
 
     document.getElementById('btnMoveFolderLeft').onclick = () => {
@@ -578,12 +579,9 @@
 
     document.getElementById('btnDeleteFolderPrep').onclick = () => {
       if(folders.length === 1) return alert('최소 1개의 폴더는 남아있어야 합니다.');
-      
       const oldName = folders[managingFolderIndex];
       const targetFolder = folders.find(f => f !== oldName);
-      
       document.getElementById('btnMoveToDefault').textContent = `'${targetFolder}'(으)로 모두 이동`;
-      
       document.getElementById('folderManageModal').style.display = 'none';
       document.getElementById('folderDeleteModal').style.display = 'block';
     };
@@ -591,9 +589,7 @@
     document.getElementById('btnMoveToDefault').onclick = () => {
       const oldName = folders[managingFolderIndex];
       const targetFolder = folders.find(f => f !== oldName); 
-      
       studyData.forEach(item => { if(item.folder === oldName) item.folder = targetFolder; });
-      
       folders = folders.filter(f => f !== oldName);
       currentFolderIndex = folders.indexOf(targetFolder);
       saveToLocal();
@@ -609,13 +605,18 @@
       closeModals();
     };
 
-    function switchFolder(newIndex) {
+    // 🔥 스와이프 시 방향을 확실하게 받도록 함수 업그레이드
+    function switchFolder(newIndex, forceDirection) {
       if (newIndex === currentFolderIndex) return;
-      const direction = newIndex > currentFolderIndex ? 'left' : 'right';
+      const direction = forceDirection || (newIndex > currentFolderIndex ? 'left' : 'right');
       app.style.transform = direction === 'left' ? 'translateX(-50px)' : 'translateX(50px)';
       app.style.opacity = '0';
+      
       setTimeout(() => {
         currentFolderIndex = newIndex;
+        // 🔥 폴더가 바뀔 때마다 로컬 스토리지에 마지막 위치 찰칵! 저장
+        localStorage.setItem('myStudyCurrentFolder', folders[currentFolderIndex]); 
+        
         renderFolders();
         renderList();
         app.style.transition = 'none';
@@ -641,10 +642,15 @@
         }
       });
 
+      // 🔥 [기능 3] 숨김 항목이 0개일 때는 문구 아예 안 보이게 처리!
       if (hiddenCount > 0) {
         statusText.innerHTML = `현재 폴더에 숨김 처리된 항목이 <span style="color:#e74c3c;">${hiddenCount}개</span> 있습니다.`;
+        statusText.style.display = 'block';
+        statusText.style.marginBottom = '15px'; 
       } else {
-        statusText.innerHTML = `현재 폴더에 숨김 처리된 항목이 없습니다.`;
+        statusText.innerHTML = ``;
+        statusText.style.display = 'none'; // 아예 공간을 차지하지 않게!
+        statusText.style.marginBottom = '0';
       }
 
       visibleItems.forEach((dataObj, i) => {
@@ -712,17 +718,11 @@
         header.addEventListener('mouseup', cancelPress);
         header.addEventListener('mouseleave', cancelPress);
 
-        // 🔥 아코디언 열고 닫는 로직 (하나만 열기 기능 추가)
         header.addEventListener('click', (e) => {
-          if (isLongPress) {
-            e.preventDefault();
-            return;
-          }
+          if (isLongPress) { e.preventDefault(); return; }
           const isActive = accordion.classList.contains('active');
           
-          // 하나만 열기 옵션이 켜져있고, 지금 누른 걸 새로 열려고 할 때
           if (!isActive && autoClose) {
-            // 다른 모든 아코디언을 찾아서 닫아줌
             const allAccordions = app.querySelectorAll('.accordion');
             allAccordions.forEach(acc => {
               if (acc !== accordion && acc.classList.contains('active')) {
@@ -791,33 +791,28 @@
       const diffX = Math.abs(touchendX - touchstartX);
       const diffY = Math.abs(touchendY - touchstartY);
       
+      // 🔥 [기능 2] 무한 스와이프 기능! 폴더가 처음/끝이어도 반대편으로 넘어가게 수정
       if (diffX > 60 && diffX > diffY) {
-        if (touchendX < touchstartX && currentFolderIndex < folders.length - 1) switchFolder(currentFolderIndex + 1);
-        if (touchendX > touchstartX && currentFolderIndex > 0) switchFolder(currentFolderIndex - 1);
+        if (touchendX < touchstartX) { // 왼쪽으로 밀기 (다음 폴더)
+          switchFolder((currentFolderIndex + 1) % folders.length, 'left');
+        }
+        if (touchendX > touchstartX) { // 오른쪽으로 밀기 (이전 폴더)
+          switchFolder((currentFolderIndex - 1 + folders.length) % folders.length, 'right');
+        }
       }
     }, {passive: true});
 
-    // 🔥 토글 버튼 UI 갱신 함수
     function updateAutoCloseBtn() {
       toggleAutoCloseBtn.textContent = autoClose ? '🗂️ 하나만 열기: ON' : '🗂️ 하나만 열기: OFF';
-      if (autoClose) {
-        toggleAutoCloseBtn.style.color = '#4A90E2'; // 켜져있으면 파란색 글씨로 강조
-      } else {
-        toggleAutoCloseBtn.style.color = '#333';
-      }
+      toggleAutoCloseBtn.style.color = autoClose ? '#4A90E2' : '#333';
     }
 
-    // 🔥 하나만 열기 토글 이벤트 연결
     toggleAutoCloseBtn.addEventListener('click', () => {
       closeFab();
       autoClose = !autoClose;
       localStorage.setItem('myStudyAutoClose', JSON.stringify(autoClose));
       updateAutoCloseBtn();
-      
-      // 켜는 순간 여러 개 열려있을 수 있으니 화면 리셋
-      if (autoClose) {
-        renderList();
-      }
+      if (autoClose) renderList();
     });
 
     document.getElementById('showAddBtn').addEventListener('click', () => {
@@ -952,13 +947,18 @@
           } else if (up.folders && up.data) {
             folders = up.folders; studyData = up.data;
           } else throw new Error();
-          currentFolderIndex = 0; saveToLocal(); alert('백업 데이터를 불러왔습니다!');
+          
+          // 백업 불러오면 0번째 폴더가 아니라 원래 저장된 위치 혹은 처음으로 초기화!
+          currentFolderIndex = 0; 
+          saveToLocal(); 
+          alert('백업 데이터를 불러왔습니다!');
         } catch { alert('잘못된 백업 파일입니다.'); }
       };
       reader.readAsText(file);
       document.getElementById('fileInput').value = '';
     });
 
+    // 앱 켤 때 초기 화면 그리기
     renderFolders();
     renderList();
   </script>
